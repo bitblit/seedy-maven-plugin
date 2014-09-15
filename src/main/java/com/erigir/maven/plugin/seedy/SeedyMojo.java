@@ -1,34 +1,30 @@
 package com.erigir.maven.plugin.seedy;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient;
 import com.amazonaws.services.elasticbeanstalk.model.*;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
-import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 @Mojo(name = "seedy")
 public class SeedyMojo extends AbstractMojo
@@ -51,7 +47,7 @@ public class SeedyMojo extends AbstractMojo
     private String applicationName;
 
     /** Pool config file */
-    @Parameter(property = "seedy.poolConfigFile", defaultValue = "live-config.json")
+    @Parameter(property = "seedy.poolConfigFile", defaultValue = "src/main/config/live-config.json")
     private String poolConfigFile;
 
     /** Machine type */
@@ -88,6 +84,7 @@ public class SeedyMojo extends AbstractMojo
       String buildId = buildId();
       int buildNumber = buildNumber();
       String environmentName = applicationName+"-"+buildNumber;
+      String appVersionLabel = applicationName+"-"+buildId;
 
       if (environmentName.length()>MAX_ENVIRONMENT_NAME_LENGTH)
       {
@@ -104,38 +101,20 @@ public class SeedyMojo extends AbstractMojo
 
       getLog().info("Using credentials : "+obscure(credentials.getAWSAccessKeyId(),2)+" / "+obscure(credentials.getAWSSecretKey(),2));
 
-      AmazonS3Client s3 = new AmazonS3Client(credentials);
       AWSElasticBeanstalkClient eb = new AWSElasticBeanstalkClient(credentials);
-      TransferManager mgr = new TransferManager(s3);
+      S3Location warLocation = uploadPackageFile(credentials);
 
       getLog().info("Current available solution stacks: "+eb.listAvailableSolutionStacks());
 
-      // Upload the WAR file to S3
-      UploadResult ur = null;
-      try {
-          File warFile = new File(applicationFile);
-          getLog().info("Uploading " + warFile + " to " + s3Bucket + "/" + s3Prefix);
-          ur = mgr.upload(s3Bucket, s3Prefix, warFile).waitForUploadResult();
-          getLog().info("Upload finished");
-      }
-        catch (InterruptedException ie)
-          {
-              getLog().info("Interrupted during upload");
-          }
-
-      // Create a new EB Version
-      S3Location warLocation = new S3Location().withS3Bucket(ur.getBucketName()).withS3Key(ur.getKey());
-      String appVersionLabel = applicationName+"-"+buildId;
       CreateApplicationVersionRequest cavr = new CreateApplicationVersionRequest().withApplicationName(applicationName).withDescription(applicationName+" build "+buildId)
               .withVersionLabel(appVersionLabel).withSourceBundle(warLocation);
       getLog().info("Creating new elastic beanstalk version "+cavr);
       eb.createApplicationVersion(cavr);
 
       // Create a new environment for that version
+      Collection<ConfigurationOptionSetting> settings = loadSettingsFromFile();
+      getLog().info("settings:"+settings);
 
-
-
-      Collection<ConfigurationOptionSetting> settings = new LinkedList<ConfigurationOptionSetting>(); // TODO: Read from file
       CreateEnvironmentRequest cer = new CreateEnvironmentRequest().withApplicationName(applicationName).withVersionLabel(appVersionLabel).withEnvironmentName(environmentName)
               .withSolutionStackName(solutionStack).withCNAMEPrefix(environmentName).withOptionSettings(settings);
       getLog().info("Creating new environment "+cer);
@@ -157,10 +136,10 @@ public class SeedyMojo extends AbstractMojo
       getLog().info("--Should run integration tests here--");
 
       getLog().info("Finding current live url");
-      String currentLive = findLiveEnvironment(eb,liveServerDomainName);
+      EnvironmentDescription liveEnvironment = findEnvironmentByCNAME(eb, liveServerDomainName);
 
-      getLog().info("Swapping new version live (old live is "+currentLive+")");
-      SwapEnvironmentCNAMEsRequest swap = new SwapEnvironmentCNAMEsRequest().withSourceEnvironmentName(currentLive).withDestinationEnvironmentName(environmentName);
+      getLog().info("Swapping new version live (old live is "+liveEnvironment+")");
+      SwapEnvironmentCNAMEsRequest swap = new SwapEnvironmentCNAMEsRequest().withSourceEnvironmentName(liveEnvironment.getEnvironmentName()).withDestinationEnvironmentName(environmentName);
       eb.swapEnvironmentCNAMEs(swap);
 
       if (terminateOldEnviroment) {
@@ -168,12 +147,76 @@ public class SeedyMojo extends AbstractMojo
           safeSleep(preFlipLiveWaitSeconds * 1000);
 
           getLog().info("Terminating old environment");
-          TerminateEnvironmentRequest ter = new TerminateEnvironmentRequest().withEnvironmentName(currentLive);
+          TerminateEnvironmentRequest ter = new TerminateEnvironmentRequest().withEnvironmentName(liveEnvironment.getEnvironmentName());
           eb.terminateEnvironment(ter);
       }
 
       getLog().info("Deploy is now complete");
   }
+
+    // Create a new environment for that version
+    private List<ConfigurationOptionSetting> loadSettingsFromFile()
+    throws MojoExecutionException
+    {
+        List<ConfigurationOptionSetting> rval = new LinkedList<ConfigurationOptionSetting>();
+
+        if (poolConfigFile!=null)
+        {
+            File file = new File(poolConfigFile);
+            if (file.exists())
+            {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+
+                    List<ConfigurationOptionSettingBridge> temp = mapper.readValue(file, new TypeReference<List<ConfigurationOptionSettingBridge>>() {
+                    });
+                    for (ConfigurationOptionSettingBridge c:temp)
+                    {
+                        rval.add(new ConfigurationOptionSetting().withNamespace(c.namespace).withOptionName(c.optionName).withValue(c.value));
+                    }
+                } catch(IOException ioe)
+                {
+                    throw new MojoExecutionException("Error trying to read live settings file "+file,ioe);
+                }
+
+            }
+            else
+            {
+                getLog().info("Pool config file doesn't exist - skipping (was "+file+")");
+            }
+        }
+
+        return rval;
+    }
+
+
+    private S3Location uploadPackageFile(AWSCredentials credentials)
+            throws MojoExecutionException
+    {
+        AmazonS3Client s3 = new AmazonS3Client(credentials);
+        TransferManager mgr = new TransferManager(s3);
+
+        // Upload the WAR file to S3
+        UploadResult ur = null;
+        try {
+            File warFile = new File(applicationFile);
+            if (!warFile.exists())
+            {
+                throw new MojoExecutionException("File "+warFile+" doesn't exist - aborting");
+            }
+            getLog().info("Uploading " + warFile + " ("+warFile.length()+" bytes) to " + s3Bucket + "/" + s3Prefix);
+            ur = mgr.upload(s3Bucket, s3Prefix, warFile).waitForUploadResult();
+            getLog().info("Upload finished");
+        }
+        catch (InterruptedException ie)
+        {
+            getLog().info("Interrupted during upload");
+        }
+
+        // Create a new EB Version
+        S3Location warLocation = new S3Location().withS3Bucket(ur.getBucketName()).withS3Key(ur.getKey());
+        return warLocation;
+    }
 
     private int buildNumber()
     {
@@ -202,50 +245,69 @@ public class SeedyMojo extends AbstractMojo
         return rval;
     }
 
-    private String findLiveEnvironment(AWSElasticBeanstalkClient eb,String domainName)
+    private EnvironmentDescription findEnvironmentByName(AWSElasticBeanstalkClient eb,String environmentName)
     {
-        //DescribeEnvironmentsRequest der = new DescribeEnvironmentsRequest().withEnvironmentNames(domainName);
+        getLog().info("Finding environment "+environmentName);
         DescribeEnvironmentsResult res = eb.describeEnvironments();
 
-        String rval = null;
+        EnvironmentDescription rval = null;
+        for (EnvironmentDescription ed:res.getEnvironments())
+        {
+            if (ed.getEnvironmentName().equals(environmentName))
+            {
+                getLog().debug("Found match " + ed);
+                if (rval==null)
+                {
+                    rval = ed;
+                }
+                else
+                {
+                    getLog().warn("Found multiple matches, using newer");
+
+                    if (ed.getDateUpdated().after(rval.getDateUpdated()))
+                    {
+                        rval = ed;
+                    }
+                }
+            }
+        }
+
+        getLog().info("Found environment "+rval+" for name "+environmentName);
+        return rval;
+    }
+
+    private EnvironmentDescription findEnvironmentByCNAME(AWSElasticBeanstalkClient eb,String domainName)
+    {
+        DescribeEnvironmentsResult res = eb.describeEnvironments();
+
+        EnvironmentDescription rval = null;
         for (EnvironmentDescription ed:res.getEnvironments())
         {
             if (ed.getCNAME().equals(domainName))
             {
-                rval = ed.getEnvironmentName();
+                rval = ed;
             }
         }
         return rval;
     }
 
     private String getEnvironmentColor(AWSElasticBeanstalkClient eb,String environmentName)
+            throws MojoExecutionException
     {
-        DescribeEnvironmentsResult res = eb.describeEnvironments();
 
-        String rval = null;
-        for (EnvironmentDescription ed:res.getEnvironments())
+        EnvironmentDescription ed = findEnvironmentByName(eb,environmentName);
+
+        if (ed==null)
         {
-            if (ed.getEnvironmentName().equals(environmentName))
-            {
-                rval = ed.getHealth();
-            }
+            getLog().info("Couldnt find environment with name "+environmentName);
+            throw new MojoExecutionException("Couldnt find environment with name "+environmentName);
         }
-        return rval;
-    }
-
-
-    private String swapWithLiveEnvironment()
-    {
-        /*
-        10ddb1e7185c% more swapWithLiveEnvironment.sh
-echo Searching for live env for $1 - will swap for $2
-LINE=`$AWS_API_ROOT/elastic-beanstalk-describe-environments| grep $1`
-IFS='|' record=( ${LINE} )
-TRIMMED=`echo "${record[7]}" | awk '{gsub(/^ +| +$/,"")} {print  $0 }'`
-echo Live is $TRIMMED swapping with $2
-$AWS_API_ROOT/elastic-beanstalk-swap-environment-cnames -s $TRIMMED -d $2
-         */
-        return null;
+        else
+        {
+            String rval = ed.getHealth();
+            getLog().info("Returning "+rval);
+            return rval;
+        }
     }
 
     public void waitForEnvironmentGreen(AWSElasticBeanstalkClient eb,String environmentName,long maxWaitMS)
@@ -342,5 +404,42 @@ $AWS_API_ROOT/elastic-beanstalk-swap-environment-cnames -s $TRIMMED -d $2
         return rval;
     }
 
+    /**
+     * Ok, I must be doing this wrong, but I can't find anything in their docs for reading the
+     * standard JSON file with these, so here I go
+     */
+    static class ConfigurationOptionSettingBridge
+    {
+        @JsonProperty("OptionName")
+        private String optionName;
+        @JsonProperty("Value")
+        private String value;
+        @JsonProperty("Namespace")
+        private String namespace;
+
+        public String getOptionName() {
+            return optionName;
+        }
+
+        public void setOptionName(String optionName) {
+            this.optionName = optionName;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+    }
 }
 
