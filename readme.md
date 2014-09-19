@@ -1,6 +1,14 @@
 seedy-maven-plugin
 ======================
-Implements Continuous Deployment atop Elastic Beanstalk
+Helper tools to implement Continuous Deployment atop AWS Services (especially with Jenkins)
+
+Acknowledgements
+----------------
+This tool got its start from https://github.com/bazaarvoice/s3-upload-maven-plugin to which it is
+heavily indebted, especially the S3 uploader.  While I have decided to go ahead and fork from there 
+to allow more active development (last commit was 12/31/2013) and add more HTTP-centric things to the
+tool, this is in no way intended as disrespect to what is still an awesome tool.
+
 
 Configuration parameters
 ------------------------
@@ -67,3 +75,17 @@ Example Usage
   </plugins>
 </build>
 ```
+
+FAQ
+---
+
+* Why do I have to set environmental variables for my Key/Secret instead of using config parameters?
+
+Because you probably check your POM file into source control, and checking your keys into source control
+is a really bad idea (TM), so I'd like to save you from doing that.  Of course, you could still put them
+in using some Maven tricks, but there is only so far I can go to stop you from shooting yourself in the
+foot, metaphorically (or physically, for that matter).
+
+* How do I exclude a file from upload in the s3-upload plugin?
+
+Right now you can't - the configs set what metadata to set on the uploaded files, not whether or not to upload them
