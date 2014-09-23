@@ -12,7 +12,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.*;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
+import java.util.regex.Pattern;
 
 @Mojo(name = "s3-upload")
 public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataProvider {
@@ -55,18 +55,67 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     boolean recursive;
 
     /**
-     * List of upload configuration objects
+     * List of object metadata settings
      */
-    @Parameter(property = "s3-upload.uploaduploadConfigs")
-    List<UploadConfig> uploadConfigs;
+    @Parameter(property = "s3-upload.objectMetadataSettings")
+    List<ObjectMetadataSetting> objectMetadataSettings;
+
+    /**
+     */
+    @Parameter(property = "s3-upload.fileCompression")
+    FileCompression fileCompression;
+
+    /**
+     */
+    @Parameter(property = "s3-upload.cssCompilation")
+    CssCompilation cssCompilation;
+
+    /**
+     */
+    @Parameter(property = "s3-upload.javascriptCompilation")
+    JavascriptCompilation javascriptCompilation;
+
+    public void applyProcessorToFile(File src, FileProcessor processor, Pattern matching)
+            throws MojoExecutionException
+    {
+        assert(src!=null && processor!=null);
+        if (src.isFile())
+        {
+            if (matching==null || matching.matcher(src.getAbsolutePath()).matches())
+            {
+                getLog().info("Applying "+processor.getClass().getName()+" to "+src);
+                processor.process(getLog(),src);
+            }
+        }
+        else
+        {
+            for (String s:src.list())
+            {
+                applyProcessorToFile(new File(src,s),processor,matching);
+            }
+        }
+    }
 
     @Override
     public void execute() throws MojoExecutionException {
-        if (uploadConfigs == null || uploadConfigs.isEmpty()) {
-            getLog().info("No uploadConfigs specified, using default");
-            uploadConfigs = Arrays.asList(new UploadConfig());
+        if (objectMetadataSettings==null)
+        {
+            getLog().info("No upload configs specified, using default");
+            objectMetadataSettings = new LinkedList<>();
         }
 
+        if (fileCompression!=null && fileCompression.getIncludeRegex()!=null)
+        {
+            getLog().info("File compression set, adding metadata setting");
+            ObjectMetadataSetting oms = new ObjectMetadataSetting();
+            oms.setContentEncoding("gzip");
+            oms.setIncludeRegex(fileCompression.getIncludeRegex());
+
+            List<ObjectMetadataSetting> omsNew = new LinkedList<>();
+            omsNew.addAll(objectMetadataSettings);
+            omsNew.add(oms);
+            objectMetadataSettings = omsNew;
+        }
 
         File sourceFile = new File(source);
         if (!sourceFile.exists()) {
@@ -74,82 +123,74 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         }
 
         AmazonS3 s3 = s3();
-        if (endpoint != null) {
-            s3.setEndpoint(endpoint);
+
+        // This is designed to be easy to understand, not particularly efficient.  We'll
+        // work on efficiency later
+
+        // We create a copy of the file/directory because we are going to use transfer manager to post it all
+        // and we assume network is a tighter bound than disk space.  Yup, tradeoff time
+        // First pass - copy all the files
+
+        File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
+        File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
+        myTemp.deleteOnExit(); // clean up after ourselves
+        FileProcessorUtils.copyFolder(sourceFile,myTemp);
+
+        // Now, apply Css compression if applicable
+        getLog().info("Checking CSS compression");
+        if (cssCompilation!=null && cssCompilation.getIncludeRegex()!=null)
+        {
+            if (cssCompilation.isCombine())
+            {
+                getLog().info("CSS Combination not yet implemented");
+            }
+            YUICompileContentModelProcessor proc = new YUICompileContentModelProcessor();
+            applyProcessorToFile(myTemp, proc, Pattern.compile(cssCompilation.getIncludeRegex()));
         }
 
-        if (!s3.doesBucketExist(s3Bucket)) {
-            throw new MojoExecutionException("Bucket doesn't exist: " + s3Bucket);
+        getLog().info("Checking JS compression");
+        if (javascriptCompilation!=null && javascriptCompilation.getIncludeRegex()!=null)
+        {
+            if (javascriptCompilation.isCombine())
+            {
+                getLog().info("Javascript combination not yet implemented");
+            }
+            InProcessClosureCompiler.disableSystemExit(getLog());
+            JavascriptCompilerFileProcessor ipcc = new JavascriptCompilerFileProcessor();
+            try {
+                applyProcessorToFile(myTemp, ipcc, Pattern.compile(javascriptCompilation.getIncludeRegex()));
+            }
+            catch (Throwable t)
+            {
+                getLog().error("Caught "+t);
+                throw t;
+            }
+            InProcessClosureCompiler.enableSystemExit(getLog());
+        }
+
+        getLog().info("Checking GZIP compression");
+        if (fileCompression!=null && fileCompression.getIncludeRegex()!=null)
+        {
+            GZipFileProcessor gzfp = new GZipFileProcessor();
+            applyProcessorToFile(myTemp, gzfp, Pattern.compile(fileCompression.getIncludeRegex()));
+            getLog().info("GZIP compression saved "+GZipFileProcessor.totalSaved+" bytes in total");
         }
 
         if (doNotUpload) {
             getLog().info(String.format("File %s would have be uploaded to s3://%s/%s (dry run)",
-                    sourceFile, s3Bucket, s3Prefix));
+                    myTemp, s3Bucket, s3Prefix));
 
             return;
         }
 
-        getLog().info("Compressing any marked files prior to upload");
-        File tempDir = new File(System.getProperty("java.io.tmpdir"));
-        File compressed = (sourceFile.isFile()) ? new File(tempDir, sourceFile.getName()) : new File(tempDir, UUID.randomUUID().toString());
-        long saved = compress(sourceFile, compressed);
-        getLog().info(String.format("Saved a total of %s bytes via compression", saved));
-        sourceFile = compressed;
-        compressed.deleteOnExit();
-
-        boolean success = upload(s3, sourceFile);
+        getLog().info("About to being upload of files");
+        boolean success = upload(s3, myTemp);
         if (!success) {
             throw new MojoExecutionException("Unable to upload file to S3.");
         }
 
         getLog().info(String.format("File %s uploaded to s3://%s/%s",
                 sourceFile, s3Bucket, s3Prefix));
-    }
-
-    private long compress(File from, File to)
-            throws MojoExecutionException {
-        long savings = 0;
-        if (from == null || to == null) {
-            throw new MojoExecutionException("From and To both must be non-null (from=" + from + ", to=" + to + ")");
-        }
-
-        // We have to copy the file since we will be reading from a different directory
-        if (from.isFile()) {
-            try {
-                byte[] buffer = new byte[1024];
-                OutputStream out = null;
-                if (shouldCompress(from)) {
-                    out = new GZIPOutputStream(new FileOutputStream(to));
-                } else {
-                    out = new FileOutputStream(to);
-                }
-
-                FileInputStream in =
-                        new FileInputStream(from);
-                int len;
-                while ((len = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, len);
-                }
-
-                in.close();
-
-                out.close();
-                savings = from.length() - to.length();
-            } catch (IOException ioe) {
-                throw new MojoExecutionException("Error attempting to zip file", ioe);
-            }
-        } else // directory
-        {
-            to.mkdirs();
-
-            for (String s : from.list()) {
-                savings += compress(new File(from, s), new File(to, s));
-            }
-            getLog().debug(String.format("Saved %s bytes on directory %s", savings, from));
-            return savings;
-        }
-        getLog().debug(String.format("Saved %s bytes on %s", savings, from));
-        return savings;
     }
 
     private boolean upload(AmazonS3 s3, File sourceFile) throws MojoExecutionException {
@@ -179,46 +220,14 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
     @Override
     public void provideObjectMetadata(File file, ObjectMetadata objectMetadata) {
-        getLog().debug(String.format("Creating metadata for %s (size=%s)", file, file.length()));
+        getLog().debug(String.format("Creating metadata for %s (size=%s)", file.getName(), file.length()));
 
-        // Ok, cheesy, I know
-        Map<String, String> fullMetaJacket = new TreeMap<>();
-
-        for (UploadConfig e : uploadConfigs) {
-            if (e.shouldInclude(file,getLog()) && !e.shouldExclude(file,getLog())) {
+        for (ObjectMetadataSetting e : objectMetadataSettings) {
+            if (e.shouldInclude(file,getLog())) {
                 getLog().info("Applying config " + e);
                 e.update(objectMetadata);
             }
         }
-
-        if (shouldCompress(file)) {
-            getLog().info("Forcing content encoding to gzip since this file was compressed");
-            objectMetadata.setContentEncoding("gzip");
-        }
     }
-
-    /**
-     * This returns true if there exists at least 1 config saying to compress the file
-     * and no uploadConfigs saying not to
-     * NOTE: Yes, I'm well aware it does a bunch of recalculation of the pattern objects
-     * and linear searches multiple times (and doesn't shortcut the loop), but it is simple
-     * and this runs per-build.  Not really trying to save the 14 nanoseconds involved.
-     *
-     * @param f
-     * @return
-     */
-    private boolean shouldCompress(File f) {
-        boolean includeAndCompressFound = false;
-        boolean excludeFound = false;
-        for (int i = 0; i < uploadConfigs.size() && !excludeFound; i++) {
-            UploadConfig u = uploadConfigs.get(i);
-            includeAndCompressFound = includeAndCompressFound | (u.isCompress() && u.shouldInclude(f,getLog()));
-            excludeFound = excludeFound | u.shouldExclude(f,getLog());
-        }
-        return includeAndCompressFound & !excludeFound;
-    }
-
-
-
 
 }

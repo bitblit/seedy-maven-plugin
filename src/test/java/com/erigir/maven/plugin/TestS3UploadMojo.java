@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class TestS3UploadMojo {
 
     @Test
-    @Ignore
+    //@Ignore
     public void testInclusion()
             throws MojoExecutionException
     {
@@ -22,14 +22,18 @@ public class TestS3UploadMojo {
         s.source="src/test";
         s.recursive=true;
 
-        UploadConfig uc = new UploadConfig();
+        FileCompression fc = new FileCompression();
+        fc.setIncludeRegex(".*\\.java");
+
+        s.fileCompression = fc;
+
+        ObjectMetadataSetting uc = new ObjectMetadataSetting();
         uc.setIncludeRegex(".*\\.java");
-        uc.setCompress(true);
         uc.setCacheControl("Max-Age = 30");
         uc.getUserMetaData().put("mykey","myval");
         uc.setContentType("text/java");
 
-        s.uploadConfigs = Arrays.asList(uc);
+        s.objectMetadataSettings = Arrays.asList(uc);
 
         s.execute();
 

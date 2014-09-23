@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -11,10 +12,8 @@ import java.util.regex.Pattern;
 /**
  * Created by chrweiss on 9/18/14.
  */
-public class UploadConfig {
-    private String includeRegex=".*";
-    private String excludeRegex;
-    private boolean compress = false;
+public class ObjectMetadataSetting {
+    private String includeRegex;
     private String contentType;
     private String cacheControl;
     private String contentDisposition;
@@ -51,22 +50,6 @@ public class UploadConfig {
             throw new IllegalArgumentException("Cannot set includeRegex to null");
         }
         this.includeRegex = includeRegex;
-    }
-
-    public String getExcludeRegex() {
-        return excludeRegex;
-    }
-
-    public void setExcludeRegex(String excludeRegex) {
-        this.excludeRegex = excludeRegex;
-    }
-
-    public boolean isCompress() {
-        return compress;
-    }
-
-    public void setCompress(boolean compress) {
-        this.compress = compress;
     }
 
     public String getContentType() {
@@ -113,18 +96,7 @@ public class UploadConfig {
         Pattern p = Pattern.compile(includeRegex);
         boolean rval = (p.matcher(f.getAbsolutePath()).matches());
 
-        log.debug("Tested "+f+" against "+includeRegex+" returning "+rval);
-        return rval;
-    }
-
-    public boolean shouldExclude(File f, Log log) {
-        boolean rval = false;
-        if (excludeRegex!=null)
-        {
-            Pattern p = Pattern.compile(excludeRegex);
-            rval = (p.matcher(f.getAbsolutePath()).matches());
-            log.debug("Tested "+f+" against exclusion "+excludeRegex+" returning "+rval);
-        }
+        log.debug("Tested "+f.getName()+" against "+includeRegex+" returning "+rval);
         return rval;
     }
 
