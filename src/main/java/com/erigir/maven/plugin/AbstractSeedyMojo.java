@@ -34,26 +34,28 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     protected final int buildNumber(Integer def)
             throws MojoExecutionException {
         Integer rval = null;
-        String env = System.getenv("BUILD_NUMBER");
+        String env = System.getProperty("BUILD_NUMBER");
         if (env == null) {
             if (def == null) {
                 throw new MojoExecutionException("No environment variable 'BUILD_NUMBER' found and no default set");
             } else {
-                getLog().info("No environment variable 'BUILD_NUMBER' found, defaulting to " + def + " (Jenkins would set this)");
+                getLog().info("No environment variable 'BUILD_NUMBER' found, using default (Jenkins would set this)");
                 rval = def;
             }
         } else {
             rval = new Integer(env);
         }
+        getLog().info("Using build number : "+rval);
         return rval;
     }
 
     protected final String buildId() {
-        String rval = System.getenv("BUILD_ID");
+        String rval = System.getProperty("BUILD_ID");
         if (rval == null) {
             getLog().info("No environment variable 'BUILD_ID' found, defaulting to timestamp (Jenkins would set this)");
             rval = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
         }
+        getLog().info("Using build id : "+rval);
         return rval;
     }
 

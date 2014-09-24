@@ -147,6 +147,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
         getLog().info("Finding current live url");
         EnvironmentDescription liveEnvironment = findEnvironmentByCNAME(eb, liveServerDomainName);
 
+        /*
         getLog().info("Swapping new version live (old live is " + liveEnvironment + ")");
         SwapEnvironmentCNAMEsRequest swap = new SwapEnvironmentCNAMEsRequest().withSourceEnvironmentName(liveEnvironment.getEnvironmentName()).withDestinationEnvironmentName(environmentName);
         eb.swapEnvironmentCNAMEs(swap);
@@ -159,6 +160,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
             TerminateEnvironmentRequest ter = new TerminateEnvironmentRequest().withEnvironmentName(liveEnvironment.getEnvironmentName());
             eb.terminateEnvironment(ter);
         }
+        */
 
         getLog().info("Deploy is now complete");
     }
