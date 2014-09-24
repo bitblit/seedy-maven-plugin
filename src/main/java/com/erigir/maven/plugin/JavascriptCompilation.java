@@ -5,7 +5,6 @@ package com.erigir.maven.plugin;
  */
 public class JavascriptCompilation {
     private JSCompilationMode mode = JSCompilationMode.CLOSURE_BASIC;
-    private boolean combine = false;
     private String includeRegex;
 
     public String getIncludeRegex() {
@@ -22,14 +21,6 @@ public class JavascriptCompilation {
 
     public void setMode(JSCompilationMode mode) {
         this.mode = mode;
-    }
-
-    public boolean isCombine() {
-        return combine;
-    }
-
-    public void setCombine(boolean combine) {
-        this.combine = combine;
     }
 
     public static enum JSCompilationMode

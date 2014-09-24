@@ -1,10 +1,9 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.processor;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.*;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * cweiss : 7/21/12 3:14 PM
@@ -14,6 +13,8 @@ public abstract class AbstractFileProcessor implements FileProcessor {
     public boolean process(Log log, File src)
             throws MojoExecutionException
     {
+        log.info("Applying "+getClass().getSimpleName()+" to "+src.getName());
+
         try {
             if (!src.exists() || !src.isFile())
             {

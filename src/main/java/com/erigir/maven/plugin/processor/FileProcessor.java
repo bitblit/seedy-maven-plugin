@@ -1,4 +1,4 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.processor;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;

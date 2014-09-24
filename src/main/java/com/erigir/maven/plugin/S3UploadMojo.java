@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.erigir.maven.plugin.processor.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -61,6 +62,12 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     List<ObjectMetadataSetting> objectMetadataSettings;
 
     /**
+     * List of html resource batchers
+     */
+    @Parameter(property = "s3-upload.htmlResourceBatching")
+    List<HtmlResourceBatching> htmlResourceBatchings;
+
+    /**
      */
     @Parameter(property = "s3-upload.fileCompression")
     FileCompression fileCompression;
@@ -75,26 +82,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.javascriptCompilation")
     JavascriptCompilation javascriptCompilation;
 
-    public void applyProcessorToFile(File src, FileProcessor processor, Pattern matching)
-            throws MojoExecutionException
-    {
-        assert(src!=null && processor!=null);
-        if (src.isFile())
-        {
-            if (matching==null || matching.matcher(src.getAbsolutePath()).matches())
-            {
-                getLog().info("Applying "+processor.getClass().getName()+" to "+src);
-                processor.process(getLog(),src);
-            }
-        }
-        else
-        {
-            for (String s:src.list())
-            {
-                applyProcessorToFile(new File(src,s),processor,matching);
-            }
-        }
-    }
+
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -136,29 +124,54 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         myTemp.deleteOnExit(); // clean up after ourselves
         FileProcessorUtils.copyFolder(sourceFile,myTemp);
 
+        // Now, do any batching
+        getLog().info("Doing HTML resource batching");
+        if (htmlResourceBatchings!=null)
+        {
+            for (HtmlResourceBatching h:htmlResourceBatchings)
+            {
+                List<File> matching = new LinkedList<>();
+                findMatchingFiles(myTemp, Pattern.compile(h.getIncludeRegex()), matching);
+
+                if (matching.size()>0)
+                {
+                    File toOutput = new File(myTemp, h.getOutputFileName());
+                    getLog().info("Creating output file : "+toOutput);
+                    h.combine(matching, toOutput);
+
+                    List<File> htmlToFilter = new LinkedList<>();
+                    if (h.getReplaceInHtmlRegex()!=null) {
+                        ApplyFilterProcessor ap = new ApplyFilterProcessor(h);
+                        applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(h.getReplaceInHtmlRegex())), ap);
+                    }
+                    else
+                    {
+                        getLog().info("Not performing html replacement");
+                    }
+                }
+                else
+                {
+                    getLog().info("HTMLBatcher didn't find any files matching : "+h.getIncludeRegex()+", skipping");
+                }
+            }
+        }
+
         // Now, apply Css compression if applicable
         getLog().info("Checking CSS compression");
         if (cssCompilation!=null && cssCompilation.getIncludeRegex()!=null)
         {
-            if (cssCompilation.isCombine())
-            {
-                getLog().info("CSS Combination not yet implemented");
-            }
             YUICompileContentModelProcessor proc = new YUICompileContentModelProcessor();
-            applyProcessorToFile(myTemp, proc, Pattern.compile(cssCompilation.getIncludeRegex()));
+
+            applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(cssCompilation.getIncludeRegex())), proc);
         }
 
         getLog().info("Checking JS compression");
         if (javascriptCompilation!=null && javascriptCompilation.getIncludeRegex()!=null)
         {
-            if (javascriptCompilation.isCombine())
-            {
-                getLog().info("Javascript combination not yet implemented");
-            }
             InProcessClosureCompiler.disableSystemExit(getLog());
             JavascriptCompilerFileProcessor ipcc = new JavascriptCompilerFileProcessor();
             try {
-                applyProcessorToFile(myTemp, ipcc, Pattern.compile(javascriptCompilation.getIncludeRegex()));
+                applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(javascriptCompilation.getIncludeRegex())), ipcc);
             }
             catch (Throwable t)
             {
@@ -172,7 +185,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         if (fileCompression!=null && fileCompression.getIncludeRegex()!=null)
         {
             GZipFileProcessor gzfp = new GZipFileProcessor();
-            applyProcessorToFile(myTemp, gzfp, Pattern.compile(fileCompression.getIncludeRegex()));
+            applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(fileCompression.getIncludeRegex())), gzfp);
             getLog().info("GZIP compression saved "+GZipFileProcessor.totalSaved+" bytes in total");
         }
 
@@ -230,4 +243,43 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         }
     }
 
+    public void applyProcessorToFileList(List<File> src, FileProcessor processor)
+            throws MojoExecutionException
+    {
+        assert(src!=null && processor!=null);
+
+        for (File f:src)
+        {
+            getLog().info("Applying "+processor.getClass().getName()+" to "+src);
+            processor.process(getLog(),f);
+        }
+    }
+
+    public List<File> findMatchingFiles(File src, Pattern pattern)
+    {
+        List<File> rval = new LinkedList<>();
+        findMatchingFiles(src, pattern, rval);
+        getLog().info("Found "+rval.size()+" files matching pattern "+pattern+" : "+rval);
+        return rval;
+    }
+
+    public void findMatchingFiles(File src, Pattern pattern, List<File> matching)
+    {
+        assert(src!=null && matching!=null);
+        if (src.isFile())
+        {
+            if (pattern==null || pattern.matcher(src.getAbsolutePath()).matches())
+            {
+                //getLog().info("Matching " + pattern + " to " + src);
+                matching.add(src);
+            }
+        }
+        else
+        {
+            for (String s:src.list())
+            {
+                findMatchingFiles(new File(src, s), pattern, matching);
+            }
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.processor;
 
 import java.security.Permission;
 

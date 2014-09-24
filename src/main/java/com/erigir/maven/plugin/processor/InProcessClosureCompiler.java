@@ -1,4 +1,4 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.processor;
 
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilerOptions;
