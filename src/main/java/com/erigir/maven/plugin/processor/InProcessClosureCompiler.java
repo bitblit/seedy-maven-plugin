@@ -71,10 +71,14 @@ public class InProcessClosureCompiler extends CommandLineRunner {
 
         SecurityManager sm = System.getSecurityManager();
 
-        if (sm == null && DisableSystemExitSecurityManager.class.isInstance(sm)) {
+        if (sm != null && DisableSystemExitSecurityManager.class.isAssignableFrom(sm.getClass())) {
             log.info("Restoring system security manager ability to call System.exit");
             DisableSystemExitSecurityManager dss = (DisableSystemExitSecurityManager) sm;
             System.setSecurityManager(dss.getWrapped());
+        }
+        else
+        {
+            log.info("Couldn't enable security manager (class was "+sm.getClass()+" not DSESM)");
         }
     }
 

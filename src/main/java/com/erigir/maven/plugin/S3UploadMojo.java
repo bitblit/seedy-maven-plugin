@@ -86,124 +86,120 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
     @Override
     public void execute() throws MojoExecutionException {
-        if (objectMetadataSettings==null)
-        {
-            getLog().info("No upload configs specified, using default");
-            objectMetadataSettings = new LinkedList<>();
-        }
-
-        if (fileCompression!=null && fileCompression.getIncludeRegex()!=null)
-        {
-            getLog().info("File compression set, adding metadata setting");
-            ObjectMetadataSetting oms = new ObjectMetadataSetting();
-            oms.setContentEncoding("gzip");
-            oms.setIncludeRegex(fileCompression.getIncludeRegex());
-
-            List<ObjectMetadataSetting> omsNew = new LinkedList<>();
-            omsNew.addAll(objectMetadataSettings);
-            omsNew.add(oms);
-            objectMetadataSettings = omsNew;
-        }
-
-        File sourceFile = new File(source);
-        if (!sourceFile.exists()) {
-            throw new MojoExecutionException("File/folder doesn't exist: " + source);
-        }
-
-        AmazonS3 s3 = s3();
-
-        // This is designed to be easy to understand, not particularly efficient.  We'll
-        // work on efficiency later
-
-        // We create a copy of the file/directory because we are going to use transfer manager to post it all
-        // and we assume network is a tighter bound than disk space.  Yup, tradeoff time
-        // First pass - copy all the files
-
-        File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
-        File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
-        myTemp.deleteOnExit(); // clean up after ourselves
-        FileProcessorUtils.copyFolder(sourceFile,myTemp);
-
-        // Now, do any batching
-        getLog().info("Doing HTML resource batching");
-        if (htmlResourceBatchings!=null)
-        {
-            for (HtmlResourceBatching h:htmlResourceBatchings)
-            {
-                List<File> matching = new LinkedList<>();
-                findMatchingFiles(myTemp, Pattern.compile(h.getIncludeRegex()), matching);
-
-                if (matching.size()>0)
-                {
-                    File toOutput = new File(myTemp, h.getOutputFileName());
-                    getLog().info("Creating output file : "+toOutput);
-                    h.combine(matching, toOutput);
-
-                    List<File> htmlToFilter = new LinkedList<>();
-                    if (h.getReplaceInHtmlRegex()!=null) {
-                        ApplyFilterProcessor ap = new ApplyFilterProcessor(h);
-                        applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(h.getReplaceInHtmlRegex())), ap);
-                    }
-                    else
-                    {
-                        getLog().info("Not performing html replacement");
-                    }
-                }
-                else
-                {
-                    getLog().info("HTMLBatcher didn't find any files matching : "+h.getIncludeRegex()+", skipping");
-                }
+        try {
+            if (objectMetadataSettings == null) {
+                getLog().info("No upload configs specified, using default");
+                objectMetadataSettings = new LinkedList<>();
             }
-        }
 
-        // Now, apply Css compression if applicable
-        getLog().info("Checking CSS compression");
-        if (cssCompilation!=null && cssCompilation.getIncludeRegex()!=null)
-        {
-            YUICompileContentModelProcessor proc = new YUICompileContentModelProcessor();
+            if (fileCompression != null && fileCompression.getIncludeRegex() != null) {
+                getLog().info("File compression set, adding metadata setting");
+                ObjectMetadataSetting oms = new ObjectMetadataSetting();
+                oms.setContentEncoding("gzip");
+                oms.setIncludeRegex(fileCompression.getIncludeRegex());
 
-            applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(cssCompilation.getIncludeRegex())), proc);
-        }
+                List<ObjectMetadataSetting> omsNew = new LinkedList<>();
+                omsNew.addAll(objectMetadataSettings);
+                omsNew.add(oms);
+                objectMetadataSettings = omsNew;
+            }
 
-        getLog().info("Checking JS compression");
-        if (javascriptCompilation!=null && javascriptCompilation.getIncludeRegex()!=null)
-        {
+            File sourceFile = new File(source);
+            if (!sourceFile.exists()) {
+                throw new MojoExecutionException("File/folder doesn't exist: " + source);
+            }
+
+            AmazonS3 s3 = s3();
+
+
+            // Disable system exit before closure but after Amazon resources aquired
+            getLog().info("Disabling system exit (mainly for Closure)");
             InProcessClosureCompiler.disableSystemExit(getLog());
-            JavascriptCompilerFileProcessor ipcc = new JavascriptCompilerFileProcessor();
-            try {
-                applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(javascriptCompilation.getIncludeRegex())), ipcc);
+
+            // This is designed to be easy to understand, not particularly efficient.  We'll
+            // work on efficiency later
+
+            // We create a copy of the file/directory because we are going to use transfer manager to post it all
+            // and we assume network is a tighter bound than disk space.  Yup, tradeoff time
+            // First pass - copy all the files
+
+            File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
+            File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
+            myTemp.deleteOnExit(); // clean up after ourselves
+            FileProcessorUtils.copyFolder(sourceFile, myTemp);
+
+            // Now, do any batching
+            getLog().info("Doing HTML resource batching");
+            if (htmlResourceBatchings != null) {
+                for (HtmlResourceBatching h : htmlResourceBatchings) {
+                    List<File> matching = new LinkedList<>();
+                    findMatchingFiles(myTemp, Pattern.compile(h.getIncludeRegex()), matching);
+
+                    if (matching.size() > 0) {
+                        File toOutput = new File(myTemp, h.getOutputFileName());
+                        getLog().info("Creating output file : " + toOutput);
+                        h.combine(matching, toOutput);
+
+                        List<File> htmlToFilter = new LinkedList<>();
+                        if (h.getReplaceInHtmlRegex() != null) {
+                            ApplyFilterProcessor ap = new ApplyFilterProcessor(h);
+                            applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(h.getReplaceInHtmlRegex())), ap);
+                        } else {
+                            getLog().info("Not performing html replacement");
+                        }
+                    } else {
+                        getLog().info("HTMLBatcher didn't find any files matching : " + h.getIncludeRegex() + ", skipping");
+                    }
+                }
             }
-            catch (Throwable t)
-            {
-                getLog().error("Caught "+t);
-                throw t;
+
+            // Now, apply Css compression if applicable
+            getLog().info("Checking CSS compression");
+            if (cssCompilation != null && cssCompilation.getIncludeRegex() != null) {
+                YUICompileContentModelProcessor proc = new YUICompileContentModelProcessor();
+
+                applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(cssCompilation.getIncludeRegex())), proc);
             }
+
+            getLog().info("Checking JS compression");
+            if (javascriptCompilation != null && javascriptCompilation.getIncludeRegex() != null) {
+                InProcessClosureCompiler.disableSystemExit(getLog());
+                JavascriptCompilerFileProcessor ipcc = new JavascriptCompilerFileProcessor();
+                try {
+                    applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(javascriptCompilation.getIncludeRegex())), ipcc);
+                } catch (Throwable t) {
+                    getLog().error("Caught " + t);
+                    throw t;
+                }
+            }
+
+            getLog().info("Checking GZIP compression");
+            if (fileCompression != null && fileCompression.getIncludeRegex() != null) {
+                GZipFileProcessor gzfp = new GZipFileProcessor();
+                applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(fileCompression.getIncludeRegex())), gzfp);
+                getLog().info("GZIP compression saved " + GZipFileProcessor.totalSaved + " bytes in total");
+            }
+
+            if (doNotUpload) {
+                getLog().info(String.format("File %s would have be uploaded to s3://%s/%s (dry run)",
+                        myTemp, s3Bucket, s3Prefix));
+
+                return;
+            }
+
+            getLog().info("About to being upload of files");
+            boolean success = upload(s3, myTemp);
+            if (!success) {
+                throw new MojoExecutionException("Unable to upload file to S3.");
+            }
+
+            getLog().info(String.format("File %s uploaded to s3://%s/%s",
+                    sourceFile, s3Bucket, s3Prefix));
+        }
+        finally {
+            getLog().info("Re-enabling System exit for Maven's sake");
             InProcessClosureCompiler.enableSystemExit(getLog());
         }
-
-        getLog().info("Checking GZIP compression");
-        if (fileCompression!=null && fileCompression.getIncludeRegex()!=null)
-        {
-            GZipFileProcessor gzfp = new GZipFileProcessor();
-            applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(fileCompression.getIncludeRegex())), gzfp);
-            getLog().info("GZIP compression saved "+GZipFileProcessor.totalSaved+" bytes in total");
-        }
-
-        if (doNotUpload) {
-            getLog().info(String.format("File %s would have be uploaded to s3://%s/%s (dry run)",
-                    myTemp, s3Bucket, s3Prefix));
-
-            return;
-        }
-
-        getLog().info("About to being upload of files");
-        boolean success = upload(s3, myTemp);
-        if (!success) {
-            throw new MojoExecutionException("Unable to upload file to S3.");
-        }
-
-        getLog().info(String.format("File %s uploaded to s3://%s/%s",
-                sourceFile, s3Bucket, s3Prefix));
     }
 
     private boolean upload(AmazonS3 s3, File sourceFile) throws MojoExecutionException {
