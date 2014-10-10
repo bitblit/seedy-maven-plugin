@@ -6,22 +6,13 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.erigir.maven.plugin.processor.ApplyFilterProcessor;
-import com.erigir.maven.plugin.processor.FileProcessor;
-import com.erigir.maven.plugin.processor.GZipFileProcessor;
-import com.erigir.maven.plugin.processor.InProcessClosureCompiler;
-import com.erigir.maven.plugin.processor.JavascriptCompilerFileProcessor;
-import com.erigir.maven.plugin.processor.ValidationProcessor;
-import com.erigir.maven.plugin.processor.YUICompileContentModelProcessor;
+import com.erigir.maven.plugin.processor.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Mojo(name = "s3-upload")
