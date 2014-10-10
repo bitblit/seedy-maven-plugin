@@ -6,13 +6,22 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.erigir.maven.plugin.processor.*;
+import com.erigir.maven.plugin.processor.ApplyFilterProcessor;
+import com.erigir.maven.plugin.processor.FileProcessor;
+import com.erigir.maven.plugin.processor.GZipFileProcessor;
+import com.erigir.maven.plugin.processor.InProcessClosureCompiler;
+import com.erigir.maven.plugin.processor.JavascriptCompilerFileProcessor;
+import com.erigir.maven.plugin.processor.ValidationProcessor;
+import com.erigir.maven.plugin.processor.YUICompileContentModelProcessor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Mojo(name = "s3-upload")
@@ -82,6 +91,10 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.javascriptCompilation")
     JavascriptCompilation javascriptCompilation;
 
+    /**
+     */
+    @Parameter(property = "s3-upload.validators")
+    List<ValidationSetting> validators;
 
 
     @Override
@@ -127,6 +140,16 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
             FileProcessorUtils.copyFolder(sourceFile, myTemp);
+
+            // Now, run the configured file validators
+            getLog().info("Running validators");
+            if (validators != null && validators.size() > 0) {
+
+                for (ValidationSetting validator : validators) {
+                    ValidationProcessor proc = new ValidationProcessor(validator.getType());
+                    applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(validator.getIncludeRegex())), proc);
+                }
+            }
 
             // Now, do any batching
             getLog().info("Doing HTML resource batching");
