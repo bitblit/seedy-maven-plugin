@@ -83,7 +83,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     JavascriptCompilation javascriptCompilation;
 
     /**
-     * Validate the json
+     * Validators
      */
     @Parameter(property = "s3-upload.validator")
     List<Validator> validators;
