@@ -18,7 +18,9 @@ public class XMLValidator implements Validator {
         try {
             DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             parser.parse(src);
-        } catch (IOException | ParserConfigurationException | SAXException e) {
+        } catch (ParserConfigurationException e) {
+            throw new MojoExecutionException("unable to create xml parser", e);
+        } catch (SAXException | IOException e) {
             throw new MojoExecutionException("found invalid xml in file: " + src.getName(), e);
         }
     }
