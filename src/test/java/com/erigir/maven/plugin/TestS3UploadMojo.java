@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class TestS3UploadMojo {
 
     @Test
-    //@Ignore
+    @Ignore
     public void testInclusion()
             throws MojoExecutionException
     {
