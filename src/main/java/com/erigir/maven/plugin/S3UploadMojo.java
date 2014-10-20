@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.erigir.maven.plugin.processor.*;
+import com.erigir.maven.plugin.validator.Validator;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -82,6 +83,11 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.javascriptCompilation")
     JavascriptCompilation javascriptCompilation;
 
+    /**
+     */
+    @Parameter(property = "s3-upload.validators")
+    List<ValidatorSetting> validators;
+
 
 
     @Override
@@ -103,6 +109,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 omsNew.add(oms);
                 objectMetadataSettings = omsNew;
             }
+
 
             File sourceFile = new File(source);
             if (!sourceFile.exists()) {
@@ -127,6 +134,18 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
             FileProcessorUtils.copyFolder(sourceFile, myTemp);
+
+            // Validate any specified files
+            if (validators != null) {
+                for (ValidatorSetting validatorSetting : validators) {
+                    if (validatorSetting.getIncludeRegex() != null && validatorSetting.getType() != null) {
+                        Validator validator = validatorSetting.getType().getValidatorInstance();
+                        applyValidatorToFileList(findMatchingFiles(myTemp, Pattern.compile(validatorSetting.getIncludeRegex())), validator);
+                    } else {
+                        getLog().info("Not performing validation");
+                    }
+                }
+            }
 
             // Now, do any batching
             getLog().info("Doing HTML resource batching");
@@ -248,6 +267,16 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         {
             getLog().info("Applying "+processor.getClass().getName()+" to "+src);
             processor.process(getLog(),f);
+        }
+    }
+
+    public void applyValidatorToFileList(List<File> src, Validator validator)
+            throws MojoExecutionException {
+        assert(src != null && validator != null);
+
+        for (File f : src) {
+            getLog().info("Applying " + validator.getClass().getName() + " to " + src);
+            validator.validate(f);
         }
     }
 
