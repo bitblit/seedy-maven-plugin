@@ -7,12 +7,19 @@ import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.erigir.maven.plugin.processor.*;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Mojo(name = "s3-upload")
@@ -82,6 +89,11 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.javascriptCompilation")
     JavascriptCompilation javascriptCompilation;
 
+    /**
+     */
+    @Parameter(property = "s3-upload.jsonValidator")
+    JsonValidator jsonValidator;
+
 
 
     @Override
@@ -90,6 +102,24 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             if (objectMetadataSettings == null) {
                 getLog().info("No upload configs specified, using default");
                 objectMetadataSettings = new LinkedList<>();
+            }
+
+            if (jsonValidator != null && jsonValidator.getIncludeRegex() != null) {
+                boolean valid = false;
+                try{
+                final JsonParser parser = new ObjectMapper().getJsonFactory().createJsonParser(jsonValidator.getIncludeRegex());
+
+                while (parser.nextToken() != null) {
+                  valid = false;
+                }
+                  valid = true;
+            } catch (JsonParseException jpe) {
+                jpe.printStackTrace();
+                throw new MojoExecutionException("Error with json");
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+
             }
 
             if (fileCompression != null && fileCompression.getIncludeRegex() != null) {
