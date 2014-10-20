@@ -82,11 +82,6 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.javascriptCompilation")
     JavascriptCompilation javascriptCompilation;
 
-    /**
-     * Validators
-     */
-    @Parameter(property = "s3-upload.validators")
-    List<Validator> validators;
 
 
     @Override
@@ -132,19 +127,6 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
             FileProcessorUtils.copyFolder(sourceFile, myTemp);
-
-            if(validators != null) {
-
-                for(Validator validator : validators) {
-                    getLog().info("Running " + validator.getType().toString() + " validation.");
-
-                    if(Validator.ValidatorType.JSON == validator.getType()) {
-
-                        JsonProcessor jp = new JsonProcessor();
-                        applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(validator.getIncludeRegex())), jp);
-                    }
-                }
-            }
 
             // Now, do any batching
             getLog().info("Doing HTML resource batching");
