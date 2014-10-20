@@ -39,6 +39,34 @@
                 <role>developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>dhenry</id>
+            <name>David Henry</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>SummerDew</id>
+            <name>Summer Dew</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>keemax</id>
+            <name>Max Keener</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>Bero100</id>
+            <name>Rebecca Robilotto</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <licenses>
