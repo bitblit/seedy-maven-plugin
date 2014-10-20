@@ -10,6 +10,7 @@ import java.util.Arrays;
  * Created by chrweiss on 9/18/14.
  */
 public class TestS3UploadMojo {
+    private static String BUCKET_NAME="chirp.allpointpen.com";
 
     @Test
     @Ignore
@@ -18,7 +19,7 @@ public class TestS3UploadMojo {
     {
         S3UploadMojo s = new S3UploadMojo();
         //s.doNotUpload=true;
-        s.s3Bucket="chirp.allpointpen.com";
+        s.s3Bucket=BUCKET_NAME;
         s.source="src/test";
         s.recursive=true;
 
