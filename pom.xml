@@ -4,7 +4,7 @@
 
     <groupId>com.erigir</groupId>
     <artifactId>seedy-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>maven-plugin</packaging>
 
     <name>Seedy Maven Plugin</name>

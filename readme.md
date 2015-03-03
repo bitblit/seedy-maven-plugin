@@ -38,6 +38,7 @@ Pool Config File
 
 IAM Configuration For Seedy User/Role
 -------------------------------------
+See seedy-iam-permissions.json
 
 
 Jenkins Integration

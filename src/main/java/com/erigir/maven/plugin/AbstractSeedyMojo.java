@@ -49,7 +49,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     protected final int buildNumber(Integer def)
             throws MojoExecutionException {
         Integer rval = null;
-        String env = System.getProperty("BUILD_NUMBER");
+        String env = propertyOrEnvVariable("BUILD_NUMBER");
         if (env == null) {
             if (def == null) {
                 throw new MojoExecutionException("No environment variable 'BUILD_NUMBER' found and no default set");
@@ -65,12 +65,27 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     }
 
     protected final String buildId() {
-        String rval = System.getProperty("BUILD_ID");
+        String rval = propertyOrEnvVariable("BUILD_ID");
         if (rval == null) {
             getLog().info("No environment variable 'BUILD_ID' found, defaulting to timestamp (Jenkins would set this)");
             rval = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
         }
         getLog().info("Using build id : "+rval);
+        return rval;
+    }
+
+    /**
+     * Looks first at java properties, then environmental variables
+     * @param varName
+     * @return
+     */
+    protected final String propertyOrEnvVariable(String varName)
+    {
+        String rval = System.getProperty(varName);
+        if (rval==null)
+        {
+            rval = System.getenv(varName);
+        }
         return rval;
     }
 
