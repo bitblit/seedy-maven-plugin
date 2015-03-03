@@ -24,6 +24,11 @@ import java.util.Date;
  limitations under the License.
  **/
 
+
+/**
+ * @author cweiss
+ * @since .01
+ */
 public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.AbstractMojo {
     private AWSCredentials credentials;
 
@@ -76,8 +81,8 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
 
     /**
      * Looks first at java properties, then environmental variables
-     * @param varName
-     * @return
+     * @param varName String containing the name of the variable to look up
+     * @return String containing the variable, or null if none found
      */
     protected final String propertyOrEnvVariable(String varName)
     {

@@ -27,7 +27,7 @@ import java.util.List;
  * outputfilename
  *
  * Then, finds any files matching replaceInHtmlRegex, and finds and comments in them of the form:
- * <!--{flagName}--></!--END-{flagName}-->
+ * &lt;!--{flagName}--&gt;&lt;/!--END-{flagName}--&gt;
  * and replaces them with replaceText
  *
  * Created by chrweiss on 9/23/14.
