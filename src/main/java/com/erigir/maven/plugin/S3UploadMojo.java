@@ -33,6 +33,21 @@ import java.util.regex.Pattern;
 
 @Mojo(name = "s3-upload")
 public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataProvider {
+
+    /**
+     * If deploying to a different account, this is the ARN of the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleArn")
+    String assumedRoleArn;
+
+    /**
+     * If deploying to a different account, this is the external ID set on the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleExternalId")
+    String assumedRoleExternalId;
+
     /**
      * Execute all steps up except the upload to the S3.
      * This can be set to true to perform a "dryRun" execution.
@@ -308,4 +323,15 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             }
         }
     }
+
+    @Override
+    public String getAssumedRoleArn() {
+        return assumedRoleArn;
+    }
+
+    @Override
+    public String getAssumedRoleExternalId() {
+        return assumedRoleExternalId;
+    }
+
 }

@@ -1,9 +1,15 @@
 package com.erigir.maven.plugin;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.text.SimpleDateFormat;
@@ -41,10 +47,37 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
                 throw new MojoExecutionException("Couldn't fetch credentials - either set aws.accessKeyId and aws.secretKey or (better) grant this machine an IAM role");
             }
 
+            String assumedRoleARN = getAssumedRoleArn();
+            if (assumedRoleARN!=null && assumedRoleARN.trim().length()>0)
+            {
+                getLog().info("Assumed Role Arn supplied - attempting to assume that role");
+                assumedRoleARN = assumedRoleARN.trim();
+                String assumedRoleExternalId = getAssumedRoleExternalId();
+                if (assumedRoleExternalId==null || assumedRoleExternalId.trim().length()==0)
+                {
+                    throw new MojoExecutionException("If you set an assumed role arn you must also set assumed role external id");
+                }
+                assumedRoleExternalId=assumedRoleExternalId.trim();
+                String sessionName = "seedy-"+System.currentTimeMillis();
+                AssumeRoleRequest arr = new AssumeRoleRequest()
+                        .withRoleSessionName(sessionName)
+                        .withRoleArn(assumedRoleARN)
+                        .withExternalId(assumedRoleExternalId);
+
+                AWSSecurityTokenService sts = new AWSSecurityTokenServiceClient(credentials);
+                AssumeRoleResult result = sts.assumeRole(arr);
+                getLog().info("Successfully assumed role - using new credentials");
+                credentials = new BasicSessionCredentials(result.getCredentials().getAccessKeyId(), result.getCredentials().getSecretAccessKey(), result.getCredentials().getSessionToken());
+            }
+
+
             getLog().info("Using credentials : " + obscure(credentials.getAWSAccessKeyId(), 2) + " / " + obscure(credentials.getAWSSecretKey(), 2));
         }
         return credentials;
     }
+
+    public abstract String getAssumedRoleArn();
+    public abstract String getAssumedRoleExternalId();
 
     protected AmazonS3 s3()
             throws MojoExecutionException {

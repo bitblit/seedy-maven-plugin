@@ -27,6 +27,8 @@ Configuration parameters
 |maxWaitSeconds|How long to wait at any polling stage before giving up entirely in seconds| *no* | 420 |
 |preFlipLiveWaitSeconds|How long to wait after successful integration test before flipping to live (in seconds)| *no* | 15 |
 |terminateOldEnviroment|Whether to delete the old 'live' environment after flipping new system live| *no* | false |
+|assumedRoleArn|If deploying to another account, the ARN of the role to assume on that account| *no* |  |
+|assumedRoleExternalId|If deploying to another account, the external ID of the role to assume on that account| *no* |  |
 
 General Flow
 ------------

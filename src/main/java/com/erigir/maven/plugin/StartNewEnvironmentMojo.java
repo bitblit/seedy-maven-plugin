@@ -42,6 +42,21 @@ import java.util.List;
 @Mojo(name = "start-new-environment", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
     private static final int MAX_ENVIRONMENT_NAME_LENGTH = 23; // This comes from AMZN
+
+    /**
+     * If deploying to a different account, this is the ARN of the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleArn")
+    String assumedRoleArn;
+
+    /**
+     * If deploying to a different account, this is the external ID set on the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleExternalId")
+    String assumedRoleExternalId;
+
     /**
      * S3 Bucket to hold the WAR file
      */
@@ -379,5 +394,16 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
             this.namespace = namespace;
         }
     }
+
+    @Override
+    public String getAssumedRoleArn() {
+        return assumedRoleArn;
+    }
+
+    @Override
+    public String getAssumedRoleExternalId() {
+        return assumedRoleExternalId;
+    }
+
 }
 

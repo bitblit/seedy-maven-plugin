@@ -28,6 +28,21 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 @Mojo(name = "flip-environment", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class FlipEnvironmentLiveMojo extends AbstractSeedyMojo {
+
+    /**
+     * If deploying to a different account, this is the ARN of the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleArn")
+    String assumedRoleArn;
+
+    /**
+     * If deploying to a different account, this is the external ID set on the role in that account
+     * with privs to execute the deployment
+     */
+    @Parameter(property = "s3-upload.assumedRoleExternalId")
+    String assumedRoleExternalId;
+
     /**
      * Application Name in elastic beanstalk
      */
@@ -89,5 +104,14 @@ public class FlipEnvironmentLiveMojo extends AbstractSeedyMojo {
         return rval;
     }
 
+    @Override
+    public String getAssumedRoleArn() {
+        return assumedRoleArn;
+    }
+
+    @Override
+    public String getAssumedRoleExternalId() {
+        return assumedRoleExternalId;
+    }
 }
 
