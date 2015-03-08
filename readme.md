@@ -29,6 +29,7 @@ Configuration parameters
 |terminateOldEnviroment|Whether to delete the old 'live' environment after flipping new system live| *no* | false |
 |assumedRoleArn|If deploying to another account, the ARN of the role to assume on that account| *no* |  |
 |assumedRoleExternalId|If deploying to another account, the external ID of the role to assume on that account| *no* |  |
+|renameMappings|Set of renames to apply before applying other file modifications| *no* |  |
 
 General Flow
 ------------
@@ -73,6 +74,12 @@ Example Usage
                     <preFlipLiveWaitSeconds>15</preFlipLiveWaitSeconds>
                     <terminateOldEnviroment>false</terminateOldEnviroment>
                     <applicationFile>${project.build.directory}/${project.build.finalName}.war</applicationFile>
+
+                    <renameMappings>
+                        <renameMapping>
+                            <src>r.html</src>
+                            <dst>r</dst>
+                    </renameMappings>
                 </configuration>
             </plugin>
   </plugins>

@@ -32,6 +32,19 @@ public class ObjectMetadataSetting {
     private String contentEncoding;
     private Map<String, String> userMetaData = new TreeMap<>();
 
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ObjectMetadataSetting[includeRegex=").append(includeRegex)
+                .append(", contentType=").append(contentType)
+                .append(", cacheControl=").append(cacheControl)
+                .append(", contentDisposition=").append(contentDisposition)
+                .append(", contentEncoding=").append(contentEncoding)
+                .append(", userMetaData=").append(userMetaData)
+                .append("]");
+        return sb.toString();
+    }
+
     public void update(ObjectMetadata omd) {
         if (contentType != null) {
             omd.setContentType(contentType);

@@ -2,7 +2,11 @@ package com.erigir.maven.plugin;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.ObjectMetadataProvider;
 import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -12,6 +16,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -118,6 +123,24 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     @Parameter(property = "s3-upload.validators")
     List<ValidationSetting> validators;
 
+    /**
+     * Whether to move all the current values into a subdirectory
+     */
+    @Parameter(property = "s3-upload.backupCurrent", defaultValue = "true")
+    boolean backupCurrent;
+
+    /**
+     * If a backup is performed, the subdirectory will be {backupPrefix}-yyyy-mm-dd-hh-mm-ss
+     */
+    @Parameter(property = "s3-upload.backupPrefix", defaultValue = "__seedy_backup_")
+    String backupPrefix;
+
+    /**
+     * If specified, files named here get mapped to target
+     */
+    @Parameter(property = "s3-upload.renameMappings")
+    List<RenameMapping> renameMappings;
+
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -161,7 +184,28 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
+            // Copy all files over
             FileProcessorUtils.copyFolder(sourceFile, myTemp);
+
+            getLog().info("Checking rename mappings");
+            if (renameMappings!=null)
+            {
+                for (RenameMapping r:renameMappings)
+                {
+                    File input = new File(myTemp, r.getSrc());
+                    if (input.exists())
+                    {
+                        File output = new File(myTemp, r.getDst());
+                        getLog().info("Renaming "+input+" to "+output);
+                        input.renameTo(output);
+                    }
+                    else
+                    {
+                        getLog().info("Rename Mapping "+input+" doesnt exist, skipping");
+                    }
+                }
+
+            }
 
             // Now, run the configured file validators
             getLog().info("Running validators");
@@ -232,6 +276,13 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 return;
             }
 
+            if (backupCurrent)
+            {
+                String backupSubdir = backupPrefix+new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss-zzz").format(new Date());
+                getLog().info("Backup specified, using subdirectory "+backupSubdir);
+                copyAllToBackup(s3, backupSubdir);
+            }
+
             getLog().info("About to being upload of files");
             boolean success = upload(s3, myTemp);
             if (!success) {
@@ -245,6 +296,36 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             getLog().info("Re-enabling System exit for Maven's sake");
             InProcessClosureCompiler.enableSystemExit(getLog());
         }
+    }
+
+    private void copyAllToBackup(AmazonS3 s3, String backupSubdir) throws MojoExecutionException
+    {
+        getLog().info("Backing up contents of "+s3Bucket+"/"+s3Prefix+" to "+backupSubdir);
+        String prefix = (s3Prefix==null)?"":s3Prefix;
+
+
+        ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().
+                withBucketName(s3Bucket)
+                .withPrefix(prefix));
+
+        for (int i = 0; i < objectListing.getObjectSummaries().size(); i++) {
+            S3ObjectSummary os = objectListing.getObjectSummaries().get(i);
+            // Strip the folder itself
+            if (os.getKey().length() > prefix.length()) {
+                String subSect = os.getKey().substring(prefix.length());
+                if (subSect.startsWith(backupPrefix))
+                {
+                    getLog().info("Skipping "+subSect+" its a previous backup directory");
+                }
+                else
+                {
+                    String newFile = prefix+backupSubdir+"/"+subSect;
+                    getLog().info("Copying " + os.getKey() + " to " + newFile);
+                    s3.copyObject(s3Bucket,os.getKey(),s3Bucket,newFile);
+                }
+            }
+        }
+
     }
 
     private boolean upload(AmazonS3 s3, File sourceFile) throws MojoExecutionException {

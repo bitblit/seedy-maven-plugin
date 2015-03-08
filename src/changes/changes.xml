@@ -7,7 +7,14 @@
         <release version="0.3" date="Current"
                  description="This is a backwards compatible feature release.">
             <action dev="cweiss" type="add">
-				3/7/2015
+                3/7/2015
+                Added the backup capability to the S3 uploader.  Added rename mappings to the S3 uploader.
+                Fixed default toString handling on the ObjectMetadataSetting object.
+            </action>
+        </release>
+        <release version="0.4" date="2015-03-07"
+                 description="This is a backwards compatible feature release.">
+            <action dev="cweiss" type="add">
 				Added the 'assumedRoleArn' and 'assumedRoleExternalId' properties to all mojos to allow
 				Seedy to deploy to a different AWS account than the one on the current machine.  Typical use
 				case is when the build server is on account but is deploying to another account.  See
