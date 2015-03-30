@@ -2,7 +2,6 @@ package com.erigir.maven.plugin;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -170,10 +169,6 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             AmazonS3 s3 = s3();
 
 
-            // Disable system exit before closure but after Amazon resources aquired
-            getLog().info("Disabling system exit (mainly for Closure)");
-            InProcessClosureCompiler.disableSystemExit(getLog());
-
             // This is designed to be easy to understand, not particularly efficient.  We'll
             // work on efficiency later
 
@@ -252,8 +247,8 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
             getLog().info("Checking JS compression");
             if (javascriptCompilation != null && javascriptCompilation.getIncludeRegex() != null) {
-                InProcessClosureCompiler.disableSystemExit(getLog());
                 JavascriptCompilerFileProcessor ipcc = new JavascriptCompilerFileProcessor();
+                ipcc.setMode(javascriptCompilation.getMode());
                 try {
                     applyProcessorToFileList(findMatchingFiles(myTemp, Pattern.compile(javascriptCompilation.getIncludeRegex())), ipcc);
                 } catch (Throwable t) {
@@ -293,8 +288,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                     sourceFile, s3Bucket, s3Prefix));
         }
         finally {
-            getLog().info("Re-enabling System exit for Maven's sake");
-            InProcessClosureCompiler.enableSystemExit(getLog());
+            getLog().info("Seedy: All processing finished.");
         }
     }
 

@@ -4,7 +4,7 @@
 
     <groupId>com.erigir</groupId>
     <artifactId>seedy-maven-plugin</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.5</version>
     <packaging>maven-plugin</packaging>
 
     <name>Seedy Maven Plugin</name>
@@ -198,7 +198,7 @@
         <dependency>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler</artifactId>
-            <version>v20140730</version>
+            <version>v20150315</version>
         </dependency>
 
         <dependency>

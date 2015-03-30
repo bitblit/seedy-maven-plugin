@@ -4,12 +4,20 @@
 		<author email="bitblit@gmail.com">Chris Weiss</author>
 	</properties>
 	<body>
-        <release version="0.3" date="Current"
+        <release version="0.6-SNAPSHOT" date="current"
                  description="This is a backwards compatible feature release.">
             <action dev="cweiss" type="add">
-                3/7/2015
-                Added the backup capability to the S3 uploader.  Added rename mappings to the S3 uploader.
-                Fixed default toString handling on the ObjectMetadataSetting object.
+                This is under development
+            </action>
+        </release>
+        <release version="0.5" date="2015-03-30"
+                 description="This is a maintenance release.">
+            <action dev="cweiss" type="update">
+                3/30/2015
+                Upgraded Closure to version v20150315, and fixed it just crashing on some input - now bad
+                input may result in uncompressed JS but everything should still work.  Also pays attention
+                to the compilation level now, and no longer has to disable system.exit to work.  At some
+                point will extend this to allow custom externs, but not right now.
             </action>
         </release>
         <release version="0.4" date="2015-03-07"

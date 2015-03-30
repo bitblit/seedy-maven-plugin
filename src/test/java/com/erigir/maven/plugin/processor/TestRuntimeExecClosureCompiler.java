@@ -1,6 +1,8 @@
 package com.erigir.maven.plugin.processor;
 
 import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.SourceFile;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -29,12 +31,19 @@ public class TestRuntimeExecClosureCompiler {
             throws Exception
     {
         File t1 = new File(getClass().getResource("/js/test1.js").getFile());
-        File t2 = new File(getClass().getResource("/js/test2.js").getFile());
-        List<File> files = Arrays.asList(t1, t2);
+        //File t2 = new File(getClass().getResource("/js/test2.js").getFile());
+        //List<File> files = Arrays.asList(t1, t2);
 
-        RuntimeExecClosureCompiler cc = new RuntimeExecClosureCompiler();
-        String output = cc.compile(CompilationLevel.SIMPLE_OPTIMIZATIONS, files);
+        //String input = IOUtils.toString(getClass().getResourceAsStream("/js/test1.js"));
 
-        System.out.println("out: "+output);
+        JavascriptCompilerFileProcessor cc = new JavascriptCompilerFileProcessor();
+
+        String output = cc.compile(CompilationLevel.SIMPLE_OPTIMIZATIONS, Arrays.asList(SourceFile.fromFile(t1)));
+
+        System.out.println("out: \n"+output);
     }
+
+
+
+
 }
