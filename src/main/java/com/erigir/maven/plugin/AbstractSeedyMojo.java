@@ -9,25 +9,24 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
-import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 /**
- Copyright 2014 Christopher Weiss
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright 2014 Christopher Weiss
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  **/
 
 
@@ -48,17 +47,15 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
             }
 
             String assumedRoleARN = getAssumedRoleArn();
-            if (assumedRoleARN!=null && assumedRoleARN.trim().length()>0)
-            {
+            if (assumedRoleARN != null && assumedRoleARN.trim().length() > 0) {
                 getLog().info("Assumed Role Arn supplied - attempting to assume that role");
                 assumedRoleARN = assumedRoleARN.trim();
                 String assumedRoleExternalId = getAssumedRoleExternalId();
-                if (assumedRoleExternalId==null || assumedRoleExternalId.trim().length()==0)
-                {
+                if (assumedRoleExternalId == null || assumedRoleExternalId.trim().length() == 0) {
                     throw new MojoExecutionException("If you set an assumed role arn you must also set assumed role external id");
                 }
-                assumedRoleExternalId=assumedRoleExternalId.trim();
-                String sessionName = "seedy-"+System.currentTimeMillis();
+                assumedRoleExternalId = assumedRoleExternalId.trim();
+                String sessionName = "seedy-" + System.currentTimeMillis();
                 AssumeRoleRequest arr = new AssumeRoleRequest()
                         .withRoleSessionName(sessionName)
                         .withRoleArn(assumedRoleARN)
@@ -77,6 +74,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     }
 
     public abstract String getAssumedRoleArn();
+
     public abstract String getAssumedRoleExternalId();
 
     protected AmazonS3 s3()
@@ -98,7 +96,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
         } else {
             rval = new Integer(env);
         }
-        getLog().info("Using build number : "+rval);
+        getLog().info("Using build number : " + rval);
         return rval;
     }
 
@@ -108,7 +106,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
             getLog().info("No environment variable 'BUILD_ID' found, defaulting to timestamp (Jenkins would set this)");
             rval = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
         }
-        getLog().info("Using build id : "+rval);
+        getLog().info("Using build id : " + rval);
         return rval;
     }
 
@@ -117,11 +115,9 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
      * @param varName String containing the name of the variable to look up
      * @return String containing the variable, or null if none found
      */
-    protected final String propertyOrEnvVariable(String varName)
-    {
+    protected final String propertyOrEnvVariable(String varName) {
         String rval = System.getProperty(varName);
-        if (rval==null)
-        {
+        if (rval == null) {
             rval = System.getenv(varName);
         }
         return rval;

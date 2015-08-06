@@ -1,5 +1,7 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.s3uploadparam;
 
+import com.erigir.wrench.drigo.HtmlResourceBatching;
+import com.erigir.wrench.drigo.HtmlResourceBatching.ReplaceTextWrapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -7,19 +9,19 @@ import java.io.*;
 import java.util.List;
 
 /**
- Copyright 2014 Christopher Weiss
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright 2014 Christopher Weiss
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  **/
 
 /**
@@ -32,17 +34,31 @@ import java.util.List;
  *
  * Created by chrweiss on 9/23/14.
  */
-public class HtmlResourceBatching {
+public class HtmlResourceBatchingParam {
     private String flagName;
     private ReplaceTextWrapper wrapper = ReplaceTextWrapper.NONE;
     private String includeRegex;
     private String replaceInHtmlRegex;
     private String outputFileName;
     private String replaceText;
-    private boolean deleteSource=false;
-    private String fileSeparator="\n";
+    private boolean deleteSource = false;
+    private String fileSeparator = "\n";
 
-    public String getWrappedReplaceText() {return wrapper.wrap(replaceText);}
+    public HtmlResourceBatching toDrigoBatching() {
+        HtmlResourceBatching rval = new HtmlResourceBatching();
+        rval.setFlagName(flagName);
+        rval.setIncludeRegex(includeRegex);
+        rval.setReplaceInHtmlRegex(replaceInHtmlRegex);
+        rval.setOutputFileName(outputFileName);
+        rval.setReplaceText(replaceText);
+        rval.setDeleteSource(deleteSource);
+        rval.setFileSeparator(fileSeparator);
+        return rval;
+    }
+
+    public String getWrappedReplaceText() {
+        return wrapper.wrap(replaceText);
+    }
 
     public String getIncludeRegex() {
         return includeRegex;
@@ -100,52 +116,21 @@ public class HtmlResourceBatching {
         this.fileSeparator = fileSeparator;
     }
 
-    public static enum ReplaceTextWrapper
-    {
-        NONE("",""),
-        JAVASCRIPT("<script src=\"","\"></script>"),
-        CSS("<link rel=\"stylesheet\" href=\"","\" />");
-
-        String pre;
-        String post;
-
-        ReplaceTextWrapper(String pre,String post)
-        {
-            this.post = post;
-            this.pre = pre;
-        }
-
-        public String wrap(String value)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append(pre);
-            sb.append((value==null)?"":value);
-            sb.append(post);
-            return sb.toString();
-        }
-
-    }
-
-
-    public void combine(List<File> src,File output)
-            throws MojoExecutionException
-    {
+    public void combine(List<File> src, File output)
+            throws MojoExecutionException {
         try {
             OutputStream os = new FileOutputStream(output);
-            for (int i=0;i<src.size();i++)
-            {
+            for (int i = 0; i < src.size(); i++) {
                 File f = src.get(i);
-                if (i>0 && fileSeparator!=null)
-                {
+                if (i > 0 && fileSeparator != null) {
                     os.write(fileSeparator.getBytes());
                 }
-                IOUtils.copy(new FileInputStream(f),os);
+                IOUtils.copy(new FileInputStream(f), os);
             }
 
             IOUtils.closeQuietly(os);
-        } catch (IOException ioe)
-        {
-            throw new MojoExecutionException("Error combining",ioe);
+        } catch (IOException ioe) {
+            throw new MojoExecutionException("Error combining", ioe);
 
         }
     }

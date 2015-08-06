@@ -1,17 +1,233 @@
-seedy-maven-plugin
-======================
+# seedy-maven-plugin
+
 Helper tools to implement Continuous Deployment atop AWS Services (especially with Jenkins)
 
-Acknowledgements
-----------------
+## Acknowledgements
 This tool got its start from https://github.com/bazaarvoice/s3-upload-maven-plugin to which it is
 heavily indebted, especially the S3 uploader.  While I have decided to go ahead and fork from there 
 to allow more active development (last commit was 12/31/2013) and add more HTTP-centric things to the
 tool, this is in no way intended as disrespect to what is still an awesome tool.
 
+## General Notes
+Seedy ALWAYS uses the DefaultAWSCredentialProvider, and doesn't let you set a key/secret via properties.  Why?
+Because you probably check your POM file into source control, and checking your keys into source control
+is a really bad idea (TM), so I'd like to save you from doing that.  Of course, you could still put them
+in using some Maven tricks, but there is only so far I can go to stop you from shooting yourself in the
+foot, metaphorically (or physically, for that matter).
 
-Configuration parameters
-------------------------
+## IAM Configuration For Seedy User/Role
+See seedy-iam-permissions.json
+
+## Release Notes
+
+### Version 0.6
+This is a backwards compatible feature release
+* Extracted file processing from S3 Upload into its own library so it can be used standalone (Drigo, in wrench-drigo)
+* Added ability to run Babel processing prior to s3 upload (mainly for JSX processing)
+* Added ability to exclude files from upload
+* Added dynamic include capability (parse files and replace tags with contents of other files, like server side includes)
+* Finally started to fix this documentation
+
+
+## Common Configuration Parameters
+These parameters are used by all the targets, since they define how your machine interacts with AWS
+*assumedRoleArn* : ARN of an AWS role to assume for the deployment.  Typically used when the 
+build server running seedy belongs to a different AWS account than the one hosting the deployment.
+*assumedRoleExternalId*: External IS of an AWS role to assume for the deployment.  Typically used when the 
+build server running seedy belongs to a different AWS account than the one hosting the deployment.
+
+## Environment Variables Used
+*BUILD_NUMBER* : This is used when deploying a new environment to name it.  Typically provided by Jenkins but can be
+set using a -D on the command line.
+*BUILD_ID* : This is used when deploying a new environment to name it.  Typically provided by Jenkins but can be
+set using a -D on the command line.
+
+## Targets
+
+### s3-upload
+Purpose: To perform a series of transforms on a local directory, and then upload it to an S3 bucket
+
+#### Parameters
+
+| Parameter | Description | Required | Default |
+|-----------|-------------|----------|---------|
+| doNotUpload| If true, files are processed but not sent to S3 | *no* | false |
+| source | The file/folder to upload | *yes* | |
+| s3Bucket | The s3 bucket to upload to | *yes* | |
+| s3Prefix | Prefix to prepend on all uploaded files | *no* | |
+| endpoint | Force override of S3 endpoint (typically for different regions) | *no* | |
+| recursive | If a directory, recursively upload subdirectories | *no* | false | 
+| backupCurrent| If true, the current contents of the S3 bucket are backed up prior to upload | *no* | true |
+| backupPrefix | A folder of the format *backupPrefix-yyyy-mm-dd-hh-mm-ss* will be created to contain the backup | *no* | __seedy_backup_ | 
+| objectMetadataSettings | List of objectMetadataSettings definitions | *no* | |
+| htmlResourceBatching | List of htmlResourceBatching definitions | *no* | |
+| fileCompression | A single file compression definition | *no* | | 
+| cssCompilation | A single css compilation definition | *no* | |
+| babelCompilation | A single babel compilation definition | *no* | |
+| javascriptCompilation | A single javascript compilation definition | *no* | |
+| validators | A list of validation setting definitions | *no* | |
+| exclusions | A list of exclusion definitions | *no* | |
+| processIncludes | A list of process includes definitions | *no* | |
+| renameMappings | A list of rename mapping definitions | *no* | | 
+
+#### Definitions
+
+##### ObjectMetadataSetting
+Used to set object metadata on upload files
+
+Sample
+```xml
+<objectMetadataSettings>
+    <objectMetadataSetting>
+        <includeRegex>.*</includeRegex>
+        <cacheControl>max-age=30</cacheControl>
+        <contentType>text/html; charset=utf-8</contentType>
+        <contentDisposition>attachment</contentType>
+        <contentEncoding>gzip</contentType>
+        <userMetaData>
+            <uploadTime>${maven.build.timestamp}</uploadTime>
+        </userMetaData>
+    </objectMetadataSetting>
+</objectMetadataSettings>
+```
+
+##### HtmlResourceBatching
+Performs 2 actions - first, it finds a set of files that match the criteria, and combines them all into a single
+file.  Secondly, it parses all the html files in the folder, and if it finds a special comment flag pair, it replaces
+whats between them with a pointer to the new file.  Used to combine large quantities of JS or CSS files into a single
+download
+
+Sample
+```xml
+  <htmlResourceBatchings>
+    <htmlResourceBatching>
+        <flagName>INDEXSIGBUNDLE</flagName>
+        <includeRegex>.*/js/index-sig-bundle/.*\.js</includeRegex>
+        <replaceInHtmlRegex>.*\.html</replaceInHtmlRegex>
+        <wrapper>JAVASCRIPT</wrapper>
+        <outputFileName>js/index-sig-bundle.js</outputFileName>
+        <replaceText>/js/index-sig-bundle.js</replaceText>
+        <deleteSource>false</deleteSource>
+    </htmlResourceBatching>
+  </htmlResourceBatching>
+```
+
+Example HTML replacement
+
+```xml
+<!--INDEXSIGBUNDLE-->
+<script src="/js/index-sig-bundle/bootbox.min.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/form2js.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/form-validation.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/gmap-helper.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/id-number-support.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/jquery.blockUI.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/test-harness.js" type="text/javascript"></script>
+<script src="/js/index-sig-bundle/custom.js" type="text/javascript"></script>
+<!--END:INDEXSIGBUNDLE-->
+```
+
+##### FileCompression
+Define the set of files that should have GZIP compression applied to them (note, automatically sets
+the content-encoding header on those files to 'gzip' as a side effect.
+
+Example
+```xml
+<fileCompression>
+    <includeRegex>.*</includeRegex>
+</fileCompression>
+```
+
+##### CssCompilation
+Uses the YUI css compiler on anything matching
+
+Example
+```xml
+<cssCompilation>
+    <includeRegex>.*</includeRegex>
+</cssCompilation>
+```
+
+##### BabelCompilation
+Uses the Babel JS compiler on anything matching
+
+Example
+```xml
+<babelCompilation>
+    <includeRegex>.*\.jsx</includeRegex>
+</babelCompilation>
+```
+
+##### JavascriptCompilation
+Uses the Closure javascript compiler on anything matching.  Options for mode are:
+CLOSURE_WHITESPACE, CLOSURE_BASIC, CLOSURE_ADVANCED
+
+Example
+```xml
+<javascriptCompilation>
+    <includeRegex>.*\.js</includeRegex>
+    <mode>CLOSURE_WHITESPACE</mode>
+</javascriptCompilation>
+```
+
+##### Validators
+Runs validation on the matching files, throws an error if they fail and prevents upload.  Options are
+JSON, XML
+
+Example
+```xml
+<validators>
+    <validator>
+        <type>JSON</type>
+        <includeRegex>.*\.json</includeRegex>
+    </validator>
+</validators>
+```
+##### Exclusions
+Excludes matching files from processing and uploading
+
+Example
+```xml
+<exclusions>
+    <exclusion>
+        <includeRegex>.*WEB-INF.*</includeRegex>
+    </exclusion>
+</exclusions>
+```
+
+##### ProcessIncludes
+Runs the includes processor (vaguely like server side includes).  Include source
+is always the root (same as source, above)
+
+Example
+```xml
+<processIncludes>
+    <processInclude>
+        <includeRegex>.*\.html</includeRegex>
+        <prefix><![CDATA[<!--SI:]]></prefix>
+        <suffix><![CDATA[:SI-->]]></suffix>
+    </processInclude>
+</processIncludes>
+```
+
+##### RenameMappings
+Renames any matching files to the new name
+
+Example
+```xml
+<renameMappings>
+    <renameMapping>
+        <src>r.html</src>
+        <dst>r</dst>
+    </renameMapping>
+</renameMappings>
+```
+
+### start-new-environment
+Purpose: To spawn a new Elastic Beanstalk environment with the built WAR file
+
+#### Parameters
+NOTE to documenter: Really need to explain the "poolConfigFile" here 
 
 | Parameter | Description | Required | Default |
 |-----------|-------------|----------|---------|
@@ -19,37 +235,14 @@ Configuration parameters
 |s3Prefix|Prefix to prepend to the war/zip file name in S3|*yes*| |
 |applicationFile|Path to the war/zip file| *yes*| |
 |applicationName|The name of the application in elastic beanstalk| *yes* | |
-|liveServerDomainName|Name of the live server (typically applicationName.elasticbeanstalk.com)| *yes*| |
 |poolConfigFile|Full path to the config file for the environment| *no* | src/main/config/live-config.json |
-|solutionStack|Name of the solution stack to deploy| *no* |64bit Amazon Linux 2014.03 v1.0.4 running Tomcat 7 Java 7|
+|solutionStack|Name of the solution stack to deploy| *no* |Tomcat 8 Java 8 on 64bit Amazon Linux 2015.03 v1.4.5|
 |prePingSleepSeconds|How long to wait for EB to setup a stack before we start polling for 'Green' status in seconds| *no* | 300 |
 |afterGreenSleepSeconds|How long to wait after a stack reports 'Green' before starting integration tests in seconds| *no* | 30 |
 |maxWaitSeconds|How long to wait at any polling stage before giving up entirely in seconds| *no* | 420 |
-|preFlipLiveWaitSeconds|How long to wait after successful integration test before flipping to live (in seconds)| *no* | 15 |
-|terminateOldEnviroment|Whether to delete the old 'live' environment after flipping new system live| *no* | false |
-|assumedRoleArn|If deploying to another account, the ARN of the role to assume on that account| *no* |  |
-|assumedRoleExternalId|If deploying to another account, the external ID of the role to assume on that account| *no* |  |
-|renameMappings|Set of renames to apply before applying other file modifications| *no* |  |
+|liveServerDomainName|Name of the live server (typically applicationName.elasticbeanstalk.com)| *yes*| |
 
-General Flow
-------------
-
-
-Pool Config File
-----------------
-
-
-IAM Configuration For Seedy User/Role
--------------------------------------
-See seedy-iam-permissions.json
-
-
-Jenkins Integration
--------------------
-
-
-Example Usage
-----------------------
+#### Example Usage
 ```xml
 <build>
   ...
@@ -86,16 +279,16 @@ Example Usage
 </build>
 ```
 
-FAQ
----
+### flip-environment
+Purpose: To swap URL's on an Elastic Beanstalk environment (typically after the integration tests are run on an environment
+spawned by "start-new-environment"
 
-* Why do I have to set environmental variables for my Key/Secret instead of using config parameters?
+Note: This is still under development as of version 0.6
 
-Because you probably check your POM file into source control, and checking your keys into source control
-is a really bad idea (TM), so I'd like to save you from doing that.  Of course, you could still put them
-in using some Maven tricks, but there is only so far I can go to stop you from shooting yourself in the
-foot, metaphorically (or physically, for that matter).
+#### Parameters
+| Parameter | Description | Required | Default |
+|-----------|-------------|----------|---------|
+|preFlipLiveWaitSeconds|How long to wait after successful integration test before flipping to live (in seconds)| *no* | 15 |
+|terminateOldEnviroment|Whether to delete the old 'live' environment after flipping new system live| *no* | false |
 
-* How do I exclude a file from upload in the s3-upload plugin?
 
-Right now you can't - the configs set what metadata to set on the uploaded files, not whether or not to upload them

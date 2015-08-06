@@ -1,5 +1,7 @@
 package com.erigir.maven.plugin;
 
+import com.erigir.maven.plugin.s3uploadparam.FileCompressionParam;
+import com.erigir.maven.plugin.s3uploadparam.ObjectMetadataSettingParam;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,12 +37,12 @@ public class TestS3UploadMojo {
         s.source="src/test";
         s.recursive=true;
 
-        FileCompression fc = new FileCompression();
+        FileCompressionParam fc = new FileCompressionParam();
         fc.setIncludeRegex(".*\\.java");
 
         s.fileCompression = fc;
 
-        ObjectMetadataSetting uc = new ObjectMetadataSetting();
+        ObjectMetadataSettingParam uc = new ObjectMetadataSettingParam();
         uc.setIncludeRegex(".*\\.java");
         uc.setCacheControl("Max-Age = 30");
         uc.getUserMetaData().put("mykey","myval");

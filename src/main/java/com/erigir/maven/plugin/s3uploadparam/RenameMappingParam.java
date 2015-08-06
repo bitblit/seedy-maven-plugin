@@ -1,9 +1,11 @@
-package com.erigir.maven.plugin;
+package com.erigir.maven.plugin.s3uploadparam;
+
+import com.erigir.wrench.drigo.RenameMapping;
 
 /**
  * Created by chrweiss on 3/8/15.
  */
-public class RenameMapping {
+public class RenameMappingParam {
     private String src;
     private String dst;
 
@@ -21,5 +23,13 @@ public class RenameMapping {
 
     public void setDst(String dst) {
         this.dst = dst;
+    }
+
+    public RenameMapping toDrigo()
+    {
+        RenameMapping rval = new RenameMapping();
+        rval.setSrc(src);
+        rval.setDst(dst);
+        return rval;
     }
 }
