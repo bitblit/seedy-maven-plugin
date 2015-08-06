@@ -227,15 +227,13 @@ Example
 Purpose: To spawn a new Elastic Beanstalk environment with the built WAR file
 
 #### Parameters
-NOTE to documenter: Really need to explain the "poolConfigFile" here 
-
 | Parameter | Description | Required | Default |
 |-----------|-------------|----------|---------|
 |s3Bucket|The name of the S3 bucket to hold the war/zip file|*yes*| |
 |s3Prefix|Prefix to prepend to the war/zip file name in S3|*yes*| |
 |applicationFile|Path to the war/zip file| *yes*| |
 |applicationName|The name of the application in elastic beanstalk| *yes* | |
-|poolConfigFile|Full path to the config file for the environment| *no* | src/main/config/live-config.json |
+|poolConfigFile|Full path to the config file for the environment (see Pool Config File below)| *no* | src/main/config/live-config.json |
 |solutionStack|Name of the solution stack to deploy| *no* |Tomcat 8 Java 8 on 64bit Amazon Linux 2015.03 v1.4.5|
 |prePingSleepSeconds|How long to wait for EB to setup a stack before we start polling for 'Green' status in seconds| *no* | 300 |
 |afterGreenSleepSeconds|How long to wait after a stack reports 'Green' before starting integration tests in seconds| *no* | 30 |
@@ -278,6 +276,87 @@ NOTE to documenter: Really need to explain the "poolConfigFile" here
   </plugins>
 </build>
 ```
+
+#### Pool Config File
+This file allows you to configure the pool of for the elastic beanstalk environment.  There are lots of possible
+settings, see AWS docs for details.
+
+Example
+```json
+[
+    {
+        "Namespace": "aws:autoscaling:asg",
+        "OptionName": "MinSize",
+        "Value": "1"
+    },
+    {
+        "Namespace": "aws:autoscaling:asg",
+        "OptionName": "MaxSize",
+        "Value": "4"
+    },
+    {
+        "Namespace": "aws:autoscaling:launchconfiguration",
+        "OptionName": "InstanceType",
+        "Value": "t1.micro"
+    },
+    {
+        "Namespace": "aws:autoscaling:launchconfiguration",
+        "OptionName": "EC2KeyName",
+        "Value": "your-keypair-name"
+    },
+    {
+        "Namespace": "aws:autoscaling:launchconfiguration",
+        "OptionName": "IamInstanceProfile",
+        "Value": "your-role-name"
+    },
+    {
+        "Namespace": "aws:autoscaling:launchconfiguration",
+        "OptionName": "MonitoringInterval",
+        "Value": "5 minutes"
+    },
+    {
+        "Namespace": "aws:elasticbeanstalk:sns:topics",
+        "OptionName": "Notification Topic ARN",
+        "Value": "your-topic-arn"
+    },
+    {
+        "Namespace": "aws:elasticbeanstalk:hostmanager",
+        "OptionName": "LogPublicationControl",
+        "Value": "true"
+    },
+    {
+        "Namespace": "aws:elb:loadbalancer",
+        "OptionName": "CrossZone",
+        "Value": "true"
+    },
+    {
+        "Namespace": "aws:elb:policies",
+        "OptionName": "ConnectionDrainingEnabled",
+        "Value": "true"
+    },
+    {
+        "Namespace": "aws:elb:policies",
+        "OptionName": "Stickiness Policy",
+        "Value": "true"
+    },
+    {
+        "Namespace": "aws:elb:policies",
+        "OptionName": "Stickiness Cookie Expiration",
+        "Value": "14400"
+    },
+    {
+        "Namespace": "aws:elasticbeanstalk:application:environment",
+        "OptionName": "example env property name",
+        "Value": "example env property value"
+    },
+    {
+        "Namespace" : "aws:elb:loadbalancer",
+        "OptionName": "SSLCertificateId",
+        "Value": "your SSL certificate ARN"
+    }
+]
+```
+
 
 ### flip-environment
 Purpose: To swap URL's on an Elastic Beanstalk environment (typically after the integration tests are run on an environment
