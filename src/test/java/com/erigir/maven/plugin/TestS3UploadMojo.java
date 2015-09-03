@@ -1,12 +1,15 @@
 package com.erigir.maven.plugin;
 
-import com.erigir.maven.plugin.s3uploadparam.FileCompressionParam;
-import com.erigir.maven.plugin.s3uploadparam.ObjectMetadataSettingParam;
+import com.erigir.maven.plugin.s3uploadparam.*;
+import com.erigir.wrench.drigo.JavascriptCompilation;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 /**
  Copyright 2014 Christopher Weiss
@@ -24,7 +27,7 @@ import java.util.Arrays;
  limitations under the License.
  **/
 public class TestS3UploadMojo {
-    private static String BUCKET_NAME="chirp.allpointpen.com";
+    private static String BUCKET_NAME="test-seedy-bucket";
 
     @Test
     @Ignore
@@ -36,21 +39,69 @@ public class TestS3UploadMojo {
         s.s3Bucket=BUCKET_NAME;
         s.source="src/test";
         s.recursive=true;
+        s.deltaMethod = DeltaCalculationMethod.MD5;
+        s.deleteNonMatch=true;
+        //s.doNotUpload = true;
+        s.backupCurrent=false;
 
         FileCompressionParam fc = new FileCompressionParam();
         fc.setIncludeRegex(".*\\.java");
-
         s.fileCompression = fc;
 
-        ObjectMetadataSettingParam uc = new ObjectMetadataSettingParam();
-        uc.setIncludeRegex(".*\\.java");
-        uc.setCacheControl("Max-Age = 30");
-        uc.getUserMetaData().put("mykey","myval");
-        uc.setContentType("text/java");
+        CssCompilationParam cc = new CssCompilationParam();
+        cc.setIncludeRegex(".*\\.css");
+        s.cssCompilation=cc;
 
-        s.objectMetadataSettings = Arrays.asList(uc);
+        BabelCompilationParam bc = new BabelCompilationParam();
+        bc.setIncludeRegex(".*\\.jsx");
+        s.babelCompilation=bc;
+
+        HtmlCompressionParam hc = new HtmlCompressionParam();
+        hc.setIncludeRegex(".*\\.html");
+        s.htmlCompression=hc;
+
+        JavascriptCompilationParam jc = new JavascriptCompilationParam();
+        jc.setIncludeRegex(".*\\.js");
+        jc.setMode(JavascriptCompilation.JSCompilationMode.CLOSURE_WHITESPACE);
+        s.javascriptCompilation = jc;
+
+        ExclusionParam exclusionParam1 = new ExclusionParam();
+        exclusionParam1.setIncludeRegex(".*WEB-INF.*");
+
+        ExclusionParam exclusionParam2 = new ExclusionParam();
+        exclusionParam2.setIncludeRegex(".*dynamic_content/templates.*");
+        s.exclusions = Arrays.asList(exclusionParam1,exclusionParam2);
+
+        ProcessIncludesParam processIncludesParam = new ProcessIncludesParam();
+        processIncludesParam.setIncludeRegex(".*\\.html");
+        processIncludesParam.setPrefix("<!--SI:");
+        processIncludesParam.setSuffix(":SI-->");
+        s.processIncludes = Arrays.asList(processIncludesParam);
+
+
+
+        ObjectMetadataSettingParam oms1 = new ObjectMetadataSettingParam();
+        oms1.setIncludeRegex(".*\\.java");
+        oms1.setCacheControl("Max-Age = 30");
+        oms1.getUserMetaData().put("mykey", "myval");
+        oms1.setContentType("text/java");
+
+        s.objectMetadataSettings = Arrays.asList(oms1);
+
+        ProcessReplaceParam prp = new ProcessReplaceParam();
+        prp.setIncludeRegex(".*");
+        prp.setPrefix("//--REP:");
+        prp.setSuffix(":REP--//");
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put(".*","//REPLACED!");
+        prp.setReplace(map);
+        s.replacement=prp;
 
         s.execute();
 
     }
 }
+
+// pre-replace
+//--REP:Replace me please:REP--//
+// post-replace

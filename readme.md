@@ -20,6 +20,14 @@ See seedy-iam-permissions.json
 
 ## Release Notes
 
+### Version 0.7
+This is a backwards compatible feature release
+* Added ability to do Delta comparisons and only upload files that are different
+* Added ability to delete files on S3 that don't exist locally
+* Added ability to compress HTML
+* Added ability to do general search-and-replace in uploaded text
+* Added ability to compute MD5 and stick into a metadata field
+
 ### Version 0.6
 This is a backwards compatible feature release
 * Extracted file processing from S3 Upload into its own library so it can be used standalone (Drigo, in wrench-drigo)
@@ -57,6 +65,8 @@ Purpose: To perform a series of transforms on a local directory, and then upload
 | s3Prefix | Prefix to prepend on all uploaded files | *no* | |
 | endpoint | Force override of S3 endpoint (typically for different regions) | *no* | |
 | recursive | If a directory, recursively upload subdirectories | *no* | false | 
+| deleteNonMatch | If true, any files in the S3 bucket not matching a local file are deleted (skips backup directory) | *no* | false | 
+| deltaMethod | Checks whether the remote file is already the same and if so, doesnt upload.  Options are MD5, DATE, NONE | *no* | MD5 | 
 | backupCurrent| If true, the current contents of the S3 bucket are backed up prior to upload | *no* | true |
 | backupPrefix | A folder of the format *backupPrefix-yyyy-mm-dd-hh-mm-ss* will be created to contain the backup | *no* | __seedy_backup_ | 
 | objectMetadataSettings | List of objectMetadataSettings definitions | *no* | |
@@ -68,6 +78,9 @@ Purpose: To perform a series of transforms on a local directory, and then upload
 | validators | A list of validation setting definitions | *no* | |
 | exclusions | A list of exclusion definitions | *no* | |
 | processIncludes | A list of process includes definitions | *no* | |
+| replacement | A single replacement definition | *no* | |
+| md5 | A single md5 definition | *no* | Regext matches everything by default |
+| htmlCompression | A single html compression definition | *no* | |
 | renameMappings | A list of rename mapping definitions | *no* | | 
 
 #### Definitions
@@ -222,6 +235,46 @@ Example
     </renameMapping>
 </renameMappings>
 ```
+
+##### Replacement
+Runs the replacement processor.  A lot like the includes above, except that the replacement text comes
+ from the tag instead of other files.  Maps from a Pattern->String, any content between prefix and suffix
+ that matches the pattern is replaced with the right hand side.  Anything that doesn't match is replaced with
+ blank strings.
+
+Example
+```xml
+<replacement>
+    <includeRegex>.*\.html</includeRegex>
+    <prefix><![CDATA[<!--SI:]]></prefix>
+    <suffix><![CDATA[:SI-->]]></suffix>
+    <replace>
+        <a>b</a>
+        <b>c</b>
+    </replace>
+</replacement>
+```
+
+##### MD5
+Define the set of files that should have MD5 run on them (the hex encoding of it is put into a amz-metadata, which will
+match the etag.
+
+Example
+```xml
+<md5>
+    <includeRegex>.*</includeRegex>
+</md5>
+
+##### HtmlCompression
+Define the set of files that should have HTML compression applied to them.  This removes all
+comments and condenses any multiple spaces between tags to 1 (more configurability later).
+
+Example
+```xml
+<htmlCompression>
+    <includeRegex>.*\\.html</includeRegex>
+</htmlCompression>
+
 
 ### start-new-environment
 Purpose: To spawn a new Elastic Beanstalk environment with the built WAR file

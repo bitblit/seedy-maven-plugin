@@ -29,6 +29,7 @@ public class ObjectMetadataSettingParam {
     private static final String CACHE_CONTROL = "cache-control";
     private static final String CONTENT_DISPOSITION = "content-disposition";
     private static final String CONTENT_ENCODING = "content-encoding";
+    private static final String CONTENT_MD5 = "md5-base64";
 
     private static final List<String> OMD_EXCLUDE= Arrays.asList("APPLIED");
 
@@ -37,6 +38,7 @@ public class ObjectMetadataSettingParam {
     private String cacheControl;
     private String contentDisposition;
     private String contentEncoding;
+    private String md5;
     private Map<String, String> userMetaData = new TreeMap<>();
 
     public String toString() {
@@ -47,28 +49,9 @@ public class ObjectMetadataSettingParam {
                 .append(", contentDisposition=").append(contentDisposition)
                 .append(", contentEncoding=").append(contentEncoding)
                 .append(", userMetaData=").append(userMetaData)
+                .append(", md5=").append(md5)
                 .append("]");
         return sb.toString();
-    }
-
-    public void update(ObjectMetadata omd) {
-        if (contentType != null) {
-            omd.setContentType(contentType);
-        }
-        if (cacheControl != null) {
-            omd.setCacheControl(cacheControl);
-        }
-        if (contentDisposition != null) {
-            omd.setContentDisposition(contentDisposition);
-        }
-        if (contentEncoding != null) {
-            omd.setContentEncoding(contentEncoding);
-        }
-        if (userMetaData != null) {
-            for (Map.Entry<String, String> e : userMetaData.entrySet()) {
-                omd.addUserMetadata(e.getKey(), e.getValue());
-            }
-        }
     }
 
     public String getIncludeRegex() {
@@ -114,6 +97,10 @@ public class ObjectMetadataSettingParam {
         this.contentEncoding = contentEncoding;
     }
 
+    public void setMd5(String md5) {
+        this.md5 = md5;
+    }
+
     public Map<String, String> getUserMetaData() {
         return userMetaData;
     }
@@ -140,7 +127,10 @@ public class ObjectMetadataSettingParam {
                 omd.setContentDisposition(e.getValue());
             } else if (CONTENT_ENCODING.equals(e.getKey())) {
                 omd.setContentEncoding(e.getValue());
-            } else {
+            } else if (CONTENT_MD5.equals(e.getKey())){
+                omd.setContentMD5(e.getValue());
+            }
+            else {
                 omd.addUserMetadata(e.getKey(), e.getValue());
             }
         }
@@ -160,6 +150,9 @@ public class ObjectMetadataSettingParam {
         }
         if (contentEncoding != null) {
             rval.add(createAMD(CONTENT_ENCODING, contentEncoding));
+        }
+        if (md5 != null) {
+            rval.add(createAMD(CONTENT_MD5, md5));
         }
         for (Map.Entry<String, String> e : userMetaData.entrySet()) {
             if (!OMD_EXCLUDE.contains(e.getKey()))
