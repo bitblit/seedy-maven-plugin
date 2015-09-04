@@ -20,6 +20,11 @@ See seedy-iam-permissions.json
 
 ## Release Notes
 
+### Version 0.71
+This is a backwards compatible bugfix release
+* Version 0.7 didn't read all pages of an S3 bucket on delta calculation - fixed in this version
+* Reduced some logging spewage as well
+
 ### Version 0.7
 This is a backwards compatible feature release
 * Added ability to do Delta comparisons and only upload files that are different

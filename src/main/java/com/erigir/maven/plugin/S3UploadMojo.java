@@ -199,6 +199,8 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
+            getLog().info("Seedy using Drigo temp directory : "+myTemp.getAbsolutePath());
+
 
             // Build the drigo configuration
             DrigoConfiguration conf = new DrigoConfiguration();
@@ -351,53 +353,80 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
             int sameCount = 0;
             long sameBytes = 0;
-            for (S3ObjectSummary sos:listing.getObjectSummaries())
-            {
-                getLog().info("Checking delta on "+sos.getKey());
-                String s3Path = sos.getKey();
-                File localFile = new File(results.getSourceConfiguration().getDst(), s3Path);
-                if (localFile.exists())
-                {
-                    Map<String,String> local = results.getMetadata().get(localFile);
-                    switch (deltaMethod) {
-                        case DATE:
-                            long modifiedRemote = sos.getLastModified().getTime();
-                            long modifiedLocal = localFile.lastModified(); // TODO: no way this works, this file was just made
-                            if (modifiedRemote<=modifiedLocal)
-                            {
-                                getLog().debug("Remote file is newer, skipping");
-                                sameCount++;
-                                sameBytes+=localFile.length();
-                                if (!localFile.delete())
-                                {
-                                    getLog().warn("Error removing file " + localFile + " from upload");
+            boolean shouldContinue = true;
+
+            while (shouldContinue) {
+
+
+                for (S3ObjectSummary sos : listing.getObjectSummaries()) {
+                    getLog().info("Checking delta on " + sos.getKey());
+                    String s3Path = sos.getKey();
+                    File localFile = new File(results.getSourceConfiguration().getDst(), s3Path);
+                    if (localFile.exists()) {
+                        Map<String, String> local = results.getMetadata().get(localFile);
+                        switch (deltaMethod) {
+                            case DATE:
+                                long modifiedRemote = sos.getLastModified().getTime();
+                                long modifiedLocal = localFile.lastModified(); // TODO: no way this works, this file was just made
+                                if (modifiedRemote <= modifiedLocal) {
+                                    getLog().debug("Remote file is newer, skipping");
+                                    sameCount++;
+                                    sameBytes += localFile.length();
+                                    if (!localFile.delete()) {
+                                        getLog().warn("Error removing file " + localFile.getName() + " from upload");
+                                    }
+                                    while (localFile.getParentFile().list().length==0)
+                                    {
+                                        getLog().info("Parent dir empty, removing it too "+localFile.getParentFile().getName());
+                                        localFile = localFile.getParentFile();
+                                        localFile.delete();
+                                    }
                                 }
-                            }
-                            break;
-                        case MD5:
-                            String remoteMD5 = sos.getETag();
-                            String localMD5 = local.get("md5-hex");
-                            if (remoteMD5!=null && remoteMD5.equals(localMD5))
-                            {
-                                getLog().debug("Content MD5 equal, skipping");
-                                sameCount++;
-                                sameBytes+=localFile.length();
-                                if (!localFile.delete())
+                                else
                                 {
-                                    getLog().warn("Error removing file "+localFile+" from upload");
+                                    getLog().debug("Retained "+localFile.getName()+" for copy");
                                 }
-                            }
-                            break;
-                        default : getLog().debug("Delta mode none - not processing");break;
+                                break;
+                            case MD5:
+                                String remoteMD5 = sos.getETag();
+                                String localMD5 = local.get("md5-hex");
+                                if (remoteMD5 != null && remoteMD5.equals(localMD5)) {
+                                    getLog().debug("Content MD5 equal, skipping");
+                                    sameCount++;
+                                    sameBytes += localFile.length();
+                                    if (!localFile.delete()) {
+                                        getLog().warn("Error removing file " + localFile.getName() + " from upload");
+                                    }
+                                    while (localFile.getParentFile().list().length==0)
+                                    {
+                                        getLog().info("Parent dir empty, removing it too "+localFile.getParentFile().getName());
+                                        localFile = localFile.getParentFile();
+                                        localFile.delete();
+                                    }
+                                }
+                                else
+                                {
+                                    getLog().debug("Retained "+localFile.getName()+" for copy");
+                                }
+                                break;
+                            default:
+                                getLog().debug("Delta mode none - not processing");
+                                break;
+                        }
+                    } else {
+                        getLog().debug("Remote file " + sos.getKey() + " doesnt exist locally");
+                        if (deleteNonMatch) {
+                            keysToDelete.add(sos.getKey());
+                        }
                     }
+
                 }
-                else
+
+                shouldContinue = listing.isTruncated();
+                if (shouldContinue)
                 {
-                    getLog().debug("Remote file "+sos.getKey()+" doesnt exist locally");
-                    if (deleteNonMatch)
-                    {
-                        keysToDelete.add(sos.getKey());
-                    }
+                    getLog().debug("Pulling another batch from S3");
+                    listing = s3.listNextBatchOfObjects(listing);
                 }
 
             }
