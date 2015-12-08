@@ -33,6 +33,7 @@ public class TestS3UploadMojo {
     private static String BUCKET_NAME="test-seedy-bucket";
 
 
+    /*
 
     @Test
     public void test2() throws Exception
@@ -52,6 +53,7 @@ public class TestS3UploadMojo {
 
     }
 
+*/
 
     @Test
     @Ignore
