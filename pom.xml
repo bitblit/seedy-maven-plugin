@@ -17,6 +17,18 @@
         <url>https://github.com/bitblit/seedy-maven-plugin/issues</url>
     </issueManagement>
     <ciManagement>
+        <system>circleci</system>
+        <url>http://127.0.0.1:8080/continuum</url>
+        <notifiers>
+            <notifier>
+                <type>mail</type>
+                <sendOnError>true</sendOnError>
+                <sendOnFailure>true</sendOnFailure>
+                <sendOnSuccess>false</sendOnSuccess>
+                <sendOnWarning>false</sendOnWarning>
+                <configuration><address>continuum@127.0.0.1</address></configuration>
+            </notifier>
+        </notifiers>
     </ciManagement>
     <organization>
         <name>Erigir</name>
@@ -156,6 +168,18 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.4</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.doxia</groupId>
+                        <artifactId>doxia-module-markdown</artifactId>
+                        <version>1.6</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
 
@@ -206,7 +230,7 @@
         <dependency>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler</artifactId>
-            <version>v20150315</version>
+            <version>v20151015</version>
         </dependency>
 
         <dependency>
@@ -244,19 +268,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.1.2</version>
-        </dependency>
-
-        <!--
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.9-RC1</version>
-        </dependency>
--->
-        <dependency>
-            <groupId>io.github.lukehutch</groupId>
-            <artifactId>fast-classpath-scanner</artifactId>
-            <version>1.9.9</version>
         </dependency>
 
     </dependencies>
