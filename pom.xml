@@ -18,7 +18,7 @@
     </issueManagement>
     <ciManagement>
         <system>circleci</system>
-        <url>http://127.0.0.1:8080/continuum</url>
+        <url>https://circleci.com/gh/bitblit/seedy-maven-plugin</url>
         <notifiers>
             <notifier>
                 <type>mail</type>
@@ -26,7 +26,7 @@
                 <sendOnFailure>true</sendOnFailure>
                 <sendOnSuccess>false</sendOnSuccess>
                 <sendOnWarning>false</sendOnWarning>
-                <configuration><address>continuum@127.0.0.1</address></configuration>
+                <configuration><address>circleci@127.0.0.1</address></configuration>
             </notifier>
         </notifiers>
     </ciManagement>

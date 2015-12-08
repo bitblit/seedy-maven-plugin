@@ -2,6 +2,10 @@
 
 Helper tools to implement Continuous Deployment atop AWS Services (especially with Jenkins)
 
+* This site has most of its documentation in Maven format - quick link to the most important bits
+<a href="src/main/site/markdown/index.md">here</a>
+
+
 ## Acknowledgements
 This tool got its start from https://github.com/bazaarvoice/s3-upload-maven-plugin to which it is
 heavily indebted, especially the S3 uploader.  While I have decided to go ahead and fork from there 

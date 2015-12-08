@@ -30,8 +30,15 @@
     <body>
         <menu ref="reports" inherit="top"/>
         <menu ref="modules"/>
-        <menu name="Developer Notes">
-            <item href="http://wickedsource.org/2013/09/23/releasing-your-project-to-maven-central-guide/" name="Maven Releases" />
+        <menu name="Documentation">
+            <item href="release-notes.html" name="Release Notes" />
+            <item href="general-usage.html" name="General Usage" />
+            <item href="s3-upload-usage.html" name="Usage: S3Upload" />
+            <item href="deploy-lambda-api-usage.html" name="Usage: Deploy Lambda API" />
+            <item href="start-new-environment-usage.html" name="Usage: Start New Environment" />
+        </menu>
+        <menu name="Other Notes">
+            <item href="http://wickedsource.org/2013/09/23/releasing-your-project-to-maven-central-guide/" name="Doing Maven releases" />
         </menu>
     </body>
 </project>
