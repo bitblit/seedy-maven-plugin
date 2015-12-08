@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Copyright 2014 Christopher Weiss
+ * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,14 +47,14 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
      * If deploying to a different account, this is the ARN of the role in that account
      * with privs to execute the deployment
      */
-    @Parameter(property = "s3-upload.assumedRoleArn")
+    @Parameter(property = "flip-environment.assumedRoleArn")
     String assumedRoleArn;
 
     /**
      * If deploying to a different account, this is the external ID set on the role in that account
      * with privs to execute the deployment
      */
-    @Parameter(property = "s3-upload.assumedRoleExternalId")
+    @Parameter(property = "flip-environment.assumedRoleExternalId")
     String assumedRoleExternalId;
 
     /**
@@ -130,7 +130,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
     private boolean terminateOldEnviroment;
 
     @Override
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoFailureException {
         String buildId = buildId();
         int buildNumber = buildNumber(1);
         String environmentName = applicationName + "-" + buildNumber;
@@ -138,7 +138,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
 
         if (environmentName.length() > MAX_ENVIRONMENT_NAME_LENGTH) {
             getLog().warn("Environment name '" + environmentName + " would be longer than the max " + MAX_ENVIRONMENT_NAME_LENGTH + " allowed, aborting");
-            throw new MojoExecutionException("Environment name '" + environmentName + " would be longer than the max " + MAX_ENVIRONMENT_NAME_LENGTH + " allowed, aborting");
+            throw new MojoFailureException("Environment name '" + environmentName + " would be longer than the max " + MAX_ENVIRONMENT_NAME_LENGTH + " allowed, aborting");
         }
 
         AWSElasticBeanstalkClient eb = new AWSElasticBeanstalkClient(credentials());
@@ -198,7 +198,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
 
     // Create a new environment for that version
     private List<ConfigurationOptionSetting> loadSettingsFromFile()
-            throws MojoExecutionException {
+            throws MojoFailureException {
         List<ConfigurationOptionSetting> rval = new LinkedList<ConfigurationOptionSetting>();
 
         if (poolConfigFile != null) {
@@ -213,7 +213,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
                         rval.add(new ConfigurationOptionSetting().withNamespace(c.namespace).withOptionName(c.optionName).withValue(c.value));
                     }
                 } catch (IOException ioe) {
-                    throw new MojoExecutionException("Error trying to read live settings file " + file, ioe);
+                    throw new MojoFailureException("Error trying to read live settings file " + file, ioe);
                 }
 
             } else {
@@ -226,7 +226,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
 
 
     private S3Location uploadPackageFile()
-            throws MojoExecutionException {
+            throws MojoFailureException {
         AmazonS3 s3 = s3();
         TransferManager mgr = new TransferManager(s3);
 
@@ -235,7 +235,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
         try {
             File warFile = new File(applicationFile);
             if (!warFile.exists()) {
-                throw new MojoExecutionException("File " + warFile + " doesn't exist - aborting");
+                throw new MojoFailureException("File " + warFile + " doesn't exist - aborting");
             }
             getLog().info("Uploading " + warFile + " (" + warFile.length() + " bytes) to " + s3Bucket + "/" + s3Prefix);
             ur = mgr.upload(s3Bucket, s3Prefix, warFile).waitForUploadResult();
@@ -286,13 +286,13 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
     }
 
     private String getEnvironmentColor(AWSElasticBeanstalkClient eb, String environmentName)
-            throws MojoExecutionException {
+            throws MojoFailureException {
 
         EnvironmentDescription ed = findEnvironmentByName(eb, environmentName);
 
         if (ed == null) {
             getLog().info("Couldnt find environment with name " + environmentName);
-            throw new MojoExecutionException("Couldnt find environment with name " + environmentName);
+            throw new MojoFailureException("Couldnt find environment with name " + environmentName);
         } else {
             String rval = ed.getHealth();
             getLog().info("Returning " + rval);
@@ -301,7 +301,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
     }
 
     public void waitForEnvironmentGreen(AWSElasticBeanstalkClient eb, String environmentName, long maxWaitMS)
-            throws MojoExecutionException {
+            throws MojoFailureException {
         long startTime = System.currentTimeMillis();
         long step = 20000;
         long timeoutAt = startTime + maxWaitMS;
@@ -320,14 +320,14 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
 
         if (!"Green".equalsIgnoreCase(color)) {
             getLog().info(environmentName + " not green in " + maxWaitMS + "ms, giving up");
-            throw new MojoExecutionException(environmentName + " not green in " + maxWaitMS + "ms, giving up");
+            throw new MojoFailureException(environmentName + " not green in " + maxWaitMS + "ms, giving up");
         }
 
         getLog().info(environmentName + " is now green");
     }
 
     private void waitForUrl(String url, long maxWaitMS)
-            throws MojoExecutionException {
+            throws MojoFailureException {
         long startTime = System.currentTimeMillis();
         long timeoutAt = startTime + maxWaitMS;
         long stepTime = 20000; // 20 second steps
@@ -336,7 +336,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
         try {
             u = new URL("http://" + url);
         } catch (MalformedURLException mue) {
-            throw new MojoExecutionException("Bad URL " + url);
+            throw new MojoFailureException("Bad URL " + url);
         }
 
         boolean found = false;
@@ -354,7 +354,7 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
 
         if (!found) {
             getLog().info("Timed out waiting for URL " + url);
-            throw new MojoExecutionException("Timed out");
+            throw new MojoFailureException("Timed out");
         }
     }
 

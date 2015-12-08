@@ -6,12 +6,13 @@ import com.amazonaws.services.elasticbeanstalk.model.EnvironmentDescription;
 import com.amazonaws.services.elasticbeanstalk.model.SwapEnvironmentCNAMEsRequest;
 import com.amazonaws.services.elasticbeanstalk.model.TerminateEnvironmentRequest;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Copyright 2014 Christopher Weiss
+ * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +34,14 @@ public class FlipEnvironmentLiveMojo extends AbstractSeedyMojo {
      * If deploying to a different account, this is the ARN of the role in that account
      * with privs to execute the deployment
      */
-    @Parameter(property = "s3-upload.assumedRoleArn")
+    @Parameter(property = "flip-environment.assumedRoleArn")
     String assumedRoleArn;
 
     /**
      * If deploying to a different account, this is the external ID set on the role in that account
      * with privs to execute the deployment
      */
-    @Parameter(property = "s3-upload.assumedRoleExternalId")
+    @Parameter(property = "flip-environment.assumedRoleExternalId")
     String assumedRoleExternalId;
 
     /**
@@ -68,7 +69,7 @@ public class FlipEnvironmentLiveMojo extends AbstractSeedyMojo {
     private boolean terminateOldEnviroment;
 
     @Override
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoFailureException {
         int buildNumber = buildNumber(1);
         String environmentName = applicationName + "-" + buildNumber;
 

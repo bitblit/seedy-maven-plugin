@@ -2,17 +2,20 @@ package com.erigir.maven.plugin;
 
 import com.erigir.maven.plugin.s3uploadparam.*;
 import com.erigir.wrench.drigo.JavascriptCompilation;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- Copyright 2014 Christopher Weiss
+ Copyright 2014-2015 Christopher Weiss
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -29,10 +32,31 @@ import java.util.regex.Pattern;
 public class TestS3UploadMojo {
     private static String BUCKET_NAME="test-seedy-bucket";
 
+
+
+    @Test
+    public void test2() throws Exception
+    {
+        DeployLambdaAPIMojo bean = new DeployLambdaAPIMojo();
+        bean.doNotUpload = false;
+        //bean.s3FilePath="2015-12-07_03-19-56-lambda-deploy.jar";
+        bean.source = new File("/Users/cweiss1271/workspace/ecp-csp-test-support/target/ecp-csp-test-support-1.0.LOCAL-SNAPSHOT.jar");
+        bean.configFile = new File("/Users/cweiss1271/workspace/ecp-csp-test-support/src/main/config/lambda-api-descriptor.json");
+        bean.region="us-east-1";
+        bean.s3Bucket="seedy-uploads";
+        bean.deleteOnCompletion=true;
+
+        bean.execute();
+
+
+
+    }
+
+
     @Test
     @Ignore
     public void testInclusion()
-            throws MojoExecutionException
+            throws MojoFailureException
     {
         S3UploadMojo s = new S3UploadMojo();
         //s.doNotUpload=true;

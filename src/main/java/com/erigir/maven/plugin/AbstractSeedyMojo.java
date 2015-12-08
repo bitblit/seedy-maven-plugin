@@ -9,12 +9,12 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 /**
- * Copyright 2014 Christopher Weiss
+ * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,12 +38,12 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     private AWSCredentials credentials;
 
     protected synchronized final AWSCredentials credentials()
-            throws MojoExecutionException {
+            throws MojoFailureException {
         if (credentials == null) {
             getLog().info("Fetching AWS Credentials");
             credentials = new DefaultAWSCredentialsProviderChain().getCredentials();
             if (credentials == null) {
-                throw new MojoExecutionException("Couldn't fetch credentials - either set aws.accessKeyId and aws.secretKey or (better) grant this machine an IAM role");
+                throw new MojoFailureException("Couldn't fetch credentials - either set aws.accessKeyId and aws.secretKey or (better) grant this machine an IAM role");
             }
 
             String assumedRoleARN = getAssumedRoleArn();
@@ -52,7 +52,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
                 assumedRoleARN = assumedRoleARN.trim();
                 String assumedRoleExternalId = getAssumedRoleExternalId();
                 if (assumedRoleExternalId == null || assumedRoleExternalId.trim().length() == 0) {
-                    throw new MojoExecutionException("If you set an assumed role arn you must also set assumed role external id");
+                    throw new MojoFailureException("If you set an assumed role arn you must also set assumed role external id");
                 }
                 assumedRoleExternalId = assumedRoleExternalId.trim();
                 String sessionName = "seedy-" + System.currentTimeMillis();
@@ -78,17 +78,17 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
     public abstract String getAssumedRoleExternalId();
 
     protected AmazonS3 s3()
-            throws MojoExecutionException {
+            throws MojoFailureException {
         return new AmazonS3Client(credentials());
     }
 
     protected final int buildNumber(Integer def)
-            throws MojoExecutionException {
+            throws MojoFailureException {
         Integer rval = null;
         String env = propertyOrEnvVariable("BUILD_NUMBER");
         if (env == null) {
             if (def == null) {
-                throw new MojoExecutionException("No environment variable 'BUILD_NUMBER' found and no default set");
+                throw new MojoFailureException("No environment variable 'BUILD_NUMBER' found and no default set");
             } else {
                 getLog().info("No environment variable 'BUILD_NUMBER' found, using default (Jenkins would set this)");
                 rval = def;

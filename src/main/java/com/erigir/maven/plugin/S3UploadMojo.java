@@ -7,8 +7,7 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.erigir.maven.plugin.s3uploadparam.*;
 import com.erigir.wrench.drigo.*;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -20,7 +19,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Pattern;
 
 /**
- * Copyright 2014 Christopher Weiss
+ * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -187,12 +186,12 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     private DrigoResults drigoResults;
 
     @Override
-    public void execute() throws MojoExecutionException {
+    public void execute() throws MojoFailureException {
         try {
             // Setup the source directory
             File sourceFile = new File(source);
             if (!sourceFile.exists()) {
-                throw new MojoExecutionException("File/folder doesn't exist: " + source);
+                throw new MojoFailureException("File/folder doesn't exist: " + source);
             }
 
             // Setup the temporary directory
@@ -323,7 +322,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
                 boolean success = upload(s3, myTemp);
                 if (!success) {
-                    throw new MojoExecutionException("Unable to upload file to S3.");
+                    throw new MojoFailureException("Unable to upload file to S3.");
                 }
 
                 getLog().info(String.format("File %s uploaded to s3://%s/%s",
@@ -453,7 +452,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
     }
 
 
-    private void copyAllToBackup(AmazonS3 s3, String backupSubdir) throws MojoExecutionException {
+    private void copyAllToBackup(AmazonS3 s3, String backupSubdir) throws MojoFailureException {
         getLog().info("Backing up contents of " + s3Bucket + "/" + s3Prefix + " to " + backupSubdir);
         String prefix = (s3Prefix == null) ? "" : s3Prefix;
 
@@ -479,7 +478,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
     }
 
-    private boolean upload(AmazonS3 s3, File sourceFile) throws MojoExecutionException {
+    private boolean upload(AmazonS3 s3, File sourceFile) throws MojoFailureException {
         TransferManager mgr = new TransferManager(s3);
 
         Transfer transfer;
@@ -489,7 +488,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             transfer = mgr.uploadDirectory(s3Bucket, s3Prefix, sourceFile, recursive, this);
 
         } else {
-            throw new MojoExecutionException("File is neither a regular file nor a directory " + sourceFile);
+            throw new MojoFailureException("File is neither a regular file nor a directory " + sourceFile);
         }
         try {
             getLog().info(String.format("About to transfer %s bytes...", transfer.getProgress().getTotalBytesToTransfer()));
@@ -498,7 +497,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         } catch (InterruptedException e) {
             return false;
         } catch (AmazonS3Exception as3e) {
-            throw new MojoExecutionException("Error uploading to S3", as3e);
+            throw new MojoFailureException("Error uploading to S3", as3e);
         }
 
         return true;

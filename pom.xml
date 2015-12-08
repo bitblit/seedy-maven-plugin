@@ -80,11 +80,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
-        <jackson.version>2.4.1</jackson.version>
-        <aws.version>1.10.9</aws.version>
+        <jackson.version>2.6.2</jackson.version>
+        <aws.version>1.10.39</aws.version>
+        <aws.lambda.version>1.1.0</aws.lambda.version>
         <wrench.version>1.003</wrench.version>
     </properties>
 
@@ -160,6 +161,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>${aws.lambda.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>3.0</version>
@@ -217,6 +224,20 @@
             <groupId>com.erigir</groupId>
             <artifactId>wrench-drigo</artifactId>
             <version>${wrench.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -225,6 +246,18 @@
             <version>1.1.2</version>
         </dependency>
 
+        <!--
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.9-RC1</version>
+        </dependency>
+-->
+        <dependency>
+            <groupId>io.github.lukehutch</groupId>
+            <artifactId>fast-classpath-scanner</artifactId>
+            <version>1.9.9</version>
+        </dependency>
 
     </dependencies>
 

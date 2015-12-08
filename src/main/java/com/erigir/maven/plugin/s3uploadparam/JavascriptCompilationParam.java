@@ -4,7 +4,7 @@ import com.erigir.wrench.drigo.JavascriptCompilation;
 import com.erigir.wrench.drigo.JavascriptCompilation.JSCompilationMode;
 
 /**
- * Copyright 2014 Christopher Weiss
+ * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
