@@ -299,10 +299,10 @@
 <th>Line</th></tr>
 <tr class="b">
 <td>com/erigir/maven/plugin/S3UploadMojo.java</td>
-<td>371</td></tr>
+<td>365</td></tr>
 <tr class="a">
 <td>com/erigir/maven/plugin/S3UploadMojo.java</td>
-<td>393</td></tr>
+<td>384</td></tr>
 <tr class="b"><td colspan='2'>
 <div>
 <pre>                                    getLog().debug(&quot;Remote file is newer, skipping&quot;);
@@ -311,16 +311,13 @@
                                     if (!localFile.delete()) {
                                         getLog().warn(&quot;Error removing file &quot; + localFile.getName() + &quot; from upload&quot;);
                                     }
-                                    while (localFile.getParentFile().list().length==0)
-                                    {
-                                        getLog().info(&quot;Parent dir empty, removing it too &quot;+localFile.getParentFile().getName());
+                                    while (localFile.getParentFile().list().length == 0) {
+                                        getLog().info(&quot;Parent dir empty, removing it too &quot; + localFile.getParentFile().getName());
                                         localFile = localFile.getParentFile();
                                         localFile.delete();
                                     }
-                                }
-                                else
-                                {
-                                    getLog().debug(&quot;Retained &quot;+localFile.getName()+&quot; for copy&quot;);
+                                } else {
+                                    getLog().debug(&quot;Retained &quot; + localFile.getName() + &quot; for copy&quot;);
                                 }
                                 break;</pre></div></td></tr></table></div>
                   </div>
