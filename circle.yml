@@ -23,3 +23,9 @@ deployment:
    - mvn --settings ./build_server_maven_settings.xml -Dgpg.passphrase=$GPG_PASSPHRASE -Dgpg.keyname=$GPG_KEYNAME -Dgpg.homedir=$HOME -DskipTests javadoc:jar source:jar deploy
    - rm $HOME/pubring.gpg
    - rm $HOME/secring.gpg
+   - mvn -s build_server_maven_settings.xml site:site
+   - git checkout gh-pages
+   - cp -R target/site/* .
+   - git add .
+   - git commit -a -m "Updating documentation"
+   - git push origin gh-pages
