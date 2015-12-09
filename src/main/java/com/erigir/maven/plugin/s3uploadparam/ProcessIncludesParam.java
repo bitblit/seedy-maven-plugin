@@ -2,7 +2,7 @@ package com.erigir.maven.plugin.s3uploadparam;
 
 import com.erigir.wrench.drigo.ProcessIncludes;
 
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");

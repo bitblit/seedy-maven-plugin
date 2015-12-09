@@ -8,7 +8,7 @@ import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
 
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
