@@ -30,7 +30,7 @@
     <body>
         <menu ref="reports" inherit="top"/>
         <menu ref="modules"/>
-        <menu name="Documentation">
+        <menu name="Usage">
             <item href="release-notes.html" name="Release Notes" />
             <item href="general-usage.html" name="General Usage" />
             <item href="s3-upload-usage.html" name="Usage: S3Upload" />
