@@ -358,6 +358,16 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
         }
     }
 
+    @Override
+    public String getAssumedRoleArn() {
+        return assumedRoleArn;
+    }
+
+    @Override
+    public String getAssumedRoleExternalId() {
+        return assumedRoleExternalId;
+    }
+
     /**
      * Ok, I must be doing this wrong, but I can't find anything in their docs for reading the
      * standard JSON file with these, so here I go
@@ -393,16 +403,6 @@ public class StartNewEnvironmentMojo extends AbstractSeedyMojo {
         public void setNamespace(String namespace) {
             this.namespace = namespace;
         }
-    }
-
-    @Override
-    public String getAssumedRoleArn() {
-        return assumedRoleArn;
-    }
-
-    @Override
-    public String getAssumedRoleExternalId() {
-        return assumedRoleExternalId;
     }
 
 }

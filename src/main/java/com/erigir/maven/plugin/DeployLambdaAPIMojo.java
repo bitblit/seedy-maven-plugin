@@ -19,27 +19,18 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.erigir.maven.plugin.apiconfig.APIConfig;
 import com.erigir.maven.plugin.apiconfig.EndpointConfig;
-import com.erigir.maven.plugin.apiconfig.LambdaConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Copyright 2014-2015 Christopher Weiss
@@ -62,17 +53,17 @@ import java.util.concurrent.atomic.AtomicLong;
  * releases some more classes into the API (specifically, the ability to do a
  * PutIntegrationRequest against APIGateway that links to a Lambda function, and to
  * map it together)
- *
+ * <p>
  * Still, I'm releasing now (12/8/15) so that I can at least do multiple lambda-function
  * deploys from a single uploaded JAR file, which will simplify my conversion from local
  * based stuff quite a lot (and save me lots of upload time)
- *
- *
+ * <p>
+ * <p>
  * This Mojo searches the packages of a specified Jar file, finds all
- * functions annotated with @APIGatewayLambdaDescriptor, uploads the jar file 
+ * functions annotated with @APIGatewayLambdaDescriptor, uploads the jar file
  * to S3, deploys all the lambda functions, and wires (or rewires) them into
  * the specified AWS API Gateway
- *
+ * <p>
  * Note that this expects that you have already combined your dependencies into a
  * single jar - use another tool (such as the shade plugin) to do this before
  * running this mojo
@@ -157,7 +148,7 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
             AWSLambdaClient lambda = lambda();
 
             APIConfig config = readConfigFile();
-            String newFileName = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date())+"-lambda-deploy.jar";
+            String newFileName = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date()) + "-lambda-deploy.jar";
 
             if (doNotUpload) {
                 getLog().info("Processing finished, doNotUpload specified.");
@@ -167,7 +158,7 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
             } else {
 
                 if (config.getEndpoints().size() > 0) {
-                    if (s3FilePath==null) {
+                    if (s3FilePath == null) {
                         getLog().info("Uploading JAR file to s3 (" + source.length() + " bytes : " + source.getAbsolutePath() + ")");
                         ObjectMetadata omd = new ObjectMetadata();
                         omd.setContentType("application/java");
@@ -177,15 +168,15 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
                         por.withGeneralProgressListener(new ProgressListener() {
                             long total = 0;
                             int percent = 0;
+
                             @Override
                             public void progressChanged(ProgressEvent progressEvent) {
                                 if (progressEvent.getEventType() == ProgressEventType.REQUEST_BYTE_TRANSFER_EVENT) {
                                     total += progressEvent.getBytes();
                                     long newPercent = (total * 100 / source.length());
-                                    if (newPercent!=percent)
-                                    {
-                                        percent=(int)newPercent;
-                                        getLog().info("Transferred "+total+" bytes of "+source.length()+" : "+percent+"% complete");
+                                    if (newPercent != percent) {
+                                        percent = (int) newPercent;
+                                        getLog().info("Transferred " + total + " bytes of " + source.length() + " : " + percent + "% complete");
                                     }
                                 }
 
@@ -194,20 +185,18 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
                         s3().putObject(por);
 
                         getLog().info("File uploaded successfully");
-                    }
-                    else
-                    {
-                        getLog().info("Using explicit s3 path : "+s3FilePath);
+                    } else {
+                        getLog().info("Using explicit s3 path : " + s3FilePath);
                         newFileName = s3FilePath;
                     }
 
                     RestApi api = findApi(apiGateway, config.getApiName());
                     List<Resource> startingResources = findResources(apiGateway, api); // will be used by api gateway
-                    getLog().info("Found "+startingResources+" resources in the current API Gateway");
+                    getLog().info("Found " + startingResources + " resources in the current API Gateway");
 
 
                     for (EndpointConfig e : config.getEndpoints()) {
-                        getLog().info("Saving Lambda function "+ e.getLambdaConfig().getFunctionName());
+                        getLog().info("Saving Lambda function " + e.getLambdaConfig().getFunctionName());
                         deployLambdaFunction(lambda, e, newFileName);
 
 
@@ -217,9 +206,8 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
                         // TODO: Saving gateway resource
                     }
 
-                    if (deleteOnCompletion)
-                    {
-                        getLog().info("DeleteOnCompletion is specified - removing file "+newFileName);
+                    if (deleteOnCompletion) {
+                        getLog().info("DeleteOnCompletion is specified - removing file " + newFileName);
                         s3.deleteObject(s3Bucket, newFileName);
                     }
 
@@ -235,21 +223,18 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
     }
 
     private APIConfig readConfigFile()
-            throws MojoFailureException
-    {
+            throws MojoFailureException {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             APIConfig config = objectMapper.readValue(configFile, APIConfig.class);
 
-            for (EndpointConfig e:config.getEndpoints())
-            {
+            for (EndpointConfig e : config.getEndpoints()) {
                 // TODO: Pretest the class names, methods, etc
             }
 
             return config;
-        } catch (IOException e)
-        {
-            throw new MojoFailureException("Error trying to read config file",e);
+        } catch (IOException e) {
+            throw new MojoFailureException("Error trying to read config file", e);
         }
     }
 
@@ -268,33 +253,28 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         return new AmazonApiGatewayClient(credentials());
     }
 
-    private AWSLambdaClient lambda() throws MojoFailureException{
-        AWSLambdaClient client =  new AWSLambdaClient(credentials());
+    private AWSLambdaClient lambda() throws MojoFailureException {
+        AWSLambdaClient client = new AWSLambdaClient(credentials());
         client.setRegion(region());
         return client;
     }
 
-    private Region region()
-    {
+    private Region region() {
         return Region.getRegion(Regions.fromName(region));
     }
 
-    private Resource findResourceByPath(List<Resource> resources, String path)
-    {
-        Optional<Resource> atStart = resources.stream().filter((p)->p.getPath().equals(path)).findFirst();
-        return (atStart.isPresent())?atStart.get():null;
+    private Resource findResourceByPath(List<Resource> resources, String path) {
+        Optional<Resource> atStart = resources.stream().filter((p) -> p.getPath().equals(path)).findFirst();
+        return (atStart.isPresent()) ? atStart.get() : null;
     }
 
     private void deployGatewayEndpoint(AmazonApiGateway apiGateway, RestApi api, List<Resource> resourcesAtStart, final EndpointConfig endpointConfig)
-    throws MojoFailureException
-    {
-        try
-        {
+            throws MojoFailureException {
+        try {
             Resource atStart = findResourceByPath(resourcesAtStart, endpointConfig.getApiGatewayConfig().getResourcePath());
 
-            if (atStart!=null)
-            {
-                getLog().debug("Attempting delete of resource "+endpointConfig.getApiGatewayConfig().getResourcePath());
+            if (atStart != null) {
+                getLog().debug("Attempting delete of resource " + endpointConfig.getApiGatewayConfig().getResourcePath());
                 DeleteResourceRequest del = new DeleteResourceRequest()
                         .withResourceId(atStart.getId())
                         .withRestApiId(api.getId());
@@ -303,7 +283,7 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
 
             }
             Resource parentResource = findParent(resourcesAtStart, endpointConfig);
-            getLog().info("Creating resource "+endpointConfig.getApiGatewayConfig().getResourcePath());
+            getLog().info("Creating resource " + endpointConfig.getApiGatewayConfig().getResourcePath());
 
             CreateResourceRequest create = new CreateResourceRequest();
             create.withParentId(parentResource.getId());
@@ -311,11 +291,10 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
             create.withPathPart(endpointConfig.getApiGatewayConfig().endPathPart());
             CreateResourceResult createResult = apiGateway.createResource(create);
 
-            getLog().info("Created, Result was "+createResult.getId());
+            getLog().info("Created, Result was " + createResult.getId());
 
-            for (String method:endpointConfig.getApiGatewayConfig().getResourceMethods())
-            {
-                getLog().info("Creating method "+method);
+            for (String method : endpointConfig.getApiGatewayConfig().getResourceMethods()) {
+                getLog().info("Creating method " + method);
 
 
                 PutIntegrationRequest intRequest = new PutIntegrationRequest();
@@ -345,71 +324,61 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
 
                 PutMethodResult methodResult = apiGateway.putMethod(putMethodRequest);
                 */
-                getLog().info("Method created "+methodResult);
+                getLog().info("Method created " + methodResult);
             }
 
 
-
-        }
-        catch (AmazonClientException ace)
-        {
-            throw new MojoFailureException("Failure" , ace);
+        } catch (AmazonClientException ace) {
+            throw new MojoFailureException("Failure", ace);
         }
 
 
     }
 
     private Resource findParent(List<Resource> resource, EndpointConfig config)
-            throws MojoFailureException
-    {
+            throws MojoFailureException {
 
         Resource res = findResourceByPath(resource, config.getApiGatewayConfig().parentPath());
 
-        if (res==null)
-        {
-            throw new MojoFailureException("Couldnt find parent for "+config.getApiGatewayConfig().getResourcePath());
+        if (res == null) {
+            throw new MojoFailureException("Couldnt find parent for " + config.getApiGatewayConfig().getResourcePath());
         }
         return res;
     }
 
-    private List<Resource> findResources(AmazonApiGateway apiGateway, RestApi api)
-    {
+    private List<Resource> findResources(AmazonApiGateway apiGateway, RestApi api) {
         GetResourcesResult resourcesResult = apiGateway.getResources(new GetResourcesRequest().withRestApiId(api.getId()));
         return resourcesResult.getItems();
     }
 
 
     private RestApi findApi(AmazonApiGateway apiGateway, String apiName)
-            throws MojoFailureException
-    {
+            throws MojoFailureException {
         RestApi rval = null;
         List<String> names = new LinkedList<>();
 
         Objects.requireNonNull(apiName);
 
         GetRestApisResult result = apiGateway.getRestApis(new GetRestApisRequest());
-        for (RestApi r:result.getItems())
-        {
+        for (RestApi r : result.getItems()) {
             names.add(r.getName());
-            if (apiName.equals(r.getName()))
-            {
+            if (apiName.equals(r.getName())) {
                 rval = r;
             }
         }
 
-        if (rval==null)
-        {
-            throw new MojoFailureException("Couldn't find api with name "+apiName+" valid were "+names);
+        if (rval == null) {
+            throw new MojoFailureException("Couldn't find api with name " + apiName + " valid were " + names);
         }
 
         return rval;
     }
 
-        /**
-         * Attempts to delete an existing function of the same name then deploys the
-         * function code to AWS Lambda. TODO: Attempt to do an update with
-         * versioning if the function already TODO: exists.
-         */
+    /**
+     * Attempts to delete an existing function of the same name then deploys the
+     * function code to AWS Lambda. TODO: Attempt to do an update with
+     * versioning if the function already TODO: exists.
+     */
     private void deployLambdaFunction(AWSLambdaClient lambda, EndpointConfig endpointConfig, String s3FilePath) {
         // Attempt to delete it first
         try {
@@ -419,7 +388,7 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
             lambda.deleteFunction(deleteRequest);
         } catch (Exception ignored) {
             // function didn't exist in the first place.
-            getLog().debug("Didnt delete function "+endpointConfig.getLambdaConfig().getFunctionName());
+            getLog().debug("Didnt delete function " + endpointConfig.getLambdaConfig().getFunctionName());
         }
 
         CreateFunctionResult result = createFunction(lambda, endpointConfig, s3FilePath);
@@ -432,14 +401,14 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
      * function code to AWS lambda.
      *
      * @return A CreateFunctionResult indicating the success or failure of the
-     *         request.
+     * request.
      */
     private CreateFunctionResult createFunction(AWSLambdaClient lambda, EndpointConfig endpointConfig, String s3FilePath) {
         CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest();
         createFunctionRequest.setDescription(endpointConfig.getDescription());
         createFunctionRequest.setRole(endpointConfig.getLambdaConfig().getRoleArn());
         createFunctionRequest.setFunctionName(endpointConfig.getLambdaConfig().getFunctionName());
-        createFunctionRequest.setHandler(endpointConfig.getClassName()+"::handleRequest"); // For now, just handles the lambda cast one
+        createFunctionRequest.setHandler(endpointConfig.getClassName() + "::handleRequest"); // For now, just handles the lambda cast one
         createFunctionRequest.setRuntime(endpointConfig.getLambdaConfig().getRuntime());
         createFunctionRequest.setTimeout(endpointConfig.getLambdaConfig().getTimeoutInSeconds());
         createFunctionRequest.setMemorySize(endpointConfig.getLambdaConfig().getMemoryInMb());
@@ -452,15 +421,11 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         return lambda.createFunction(createFunctionRequest);
     }
 
-    private FileInputStream silentOpenInputStream(File file)
-    {
-        try
-        {
+    private FileInputStream silentOpenInputStream(File file) {
+        try {
             return new FileInputStream(file);
-        }
-        catch (FileNotFoundException fnf)
-        {
-            throw new RuntimeException("Like this could be handled at runtime?",fnf);
+        } catch (FileNotFoundException fnf) {
+            throw new RuntimeException("Like this could be handled at runtime?", fnf);
         }
     }
 

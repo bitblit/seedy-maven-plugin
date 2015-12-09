@@ -112,6 +112,7 @@ public abstract class AbstractSeedyMojo extends org.apache.maven.plugin.Abstract
 
     /**
      * Looks first at java properties, then environmental variables
+     *
      * @param varName String containing the name of the variable to look up
      * @return String containing the variable, or null if none found
      */

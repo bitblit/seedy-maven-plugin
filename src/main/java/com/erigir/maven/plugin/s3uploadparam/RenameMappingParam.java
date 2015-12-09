@@ -25,8 +25,7 @@ public class RenameMappingParam {
         this.dst = dst;
     }
 
-    public RenameMapping toDrigo()
-    {
+    public RenameMapping toDrigo() {
         RenameMapping rval = new RenameMapping();
         rval.setSrc(src);
         rval.setDst(dst);

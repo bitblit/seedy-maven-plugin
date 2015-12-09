@@ -46,8 +46,7 @@ public class ProcessIncludesParam {
         this.suffix = suffix;
     }
 
-    public ProcessIncludes toDrigo()
-    {
+    public ProcessIncludes toDrigo() {
         ProcessIncludes rval = new ProcessIncludes();
         rval.setIncludeRegex(includeRegex);
         rval.setPrefix(prefix);

@@ -31,7 +31,7 @@ public class ObjectMetadataSettingParam {
     private static final String CONTENT_ENCODING = "content-encoding";
     private static final String CONTENT_MD5 = "md5-base64";
 
-    private static final List<String> OMD_EXCLUDE= Arrays.asList("APPLIED");
+    private static final List<String> OMD_EXCLUDE = Arrays.asList("APPLIED");
 
     private String includeRegex;
     private String contentType;
@@ -40,6 +40,24 @@ public class ObjectMetadataSettingParam {
     private String contentEncoding;
     private String md5;
     private Map<String, String> userMetaData = new TreeMap<>();
+
+    public static void populateObjectMetaDataFromDrigoMeta(ObjectMetadata omd, Map<String, String> drigoMeta) {
+        for (Map.Entry<String, String> e : drigoMeta.entrySet()) {
+            if (CONTENT_TYPE.equals(e.getKey())) {
+                omd.setContentType(e.getValue());
+            } else if (CACHE_CONTROL.equals(e.getKey())) {
+                omd.setCacheControl(e.getValue());
+            } else if (CONTENT_DISPOSITION.equals(e.getKey())) {
+                omd.setContentDisposition(e.getValue());
+            } else if (CONTENT_ENCODING.equals(e.getKey())) {
+                omd.setContentEncoding(e.getValue());
+            } else if (CONTENT_MD5.equals(e.getKey())) {
+                omd.setContentMD5(e.getValue());
+            } else {
+                omd.addUserMetadata(e.getKey(), e.getValue());
+            }
+        }
+    }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -117,25 +135,6 @@ public class ObjectMetadataSettingParam {
         return rval;
     }
 
-    public static void populateObjectMetaDataFromDrigoMeta(ObjectMetadata omd, Map<String, String> drigoMeta) {
-        for (Map.Entry<String, String> e : drigoMeta.entrySet()) {
-            if (CONTENT_TYPE.equals(e.getKey())) {
-                omd.setContentType(e.getValue());
-            } else if (CACHE_CONTROL.equals(e.getKey())) {
-                omd.setCacheControl(e.getValue());
-            } else if (CONTENT_DISPOSITION.equals(e.getKey())) {
-                omd.setContentDisposition(e.getValue());
-            } else if (CONTENT_ENCODING.equals(e.getKey())) {
-                omd.setContentEncoding(e.getValue());
-            } else if (CONTENT_MD5.equals(e.getKey())){
-                omd.setContentMD5(e.getValue());
-            }
-            else {
-                omd.addUserMetadata(e.getKey(), e.getValue());
-            }
-        }
-    }
-
     public List<AddMetadata> toAddMetadata() {
         List<AddMetadata> rval = new LinkedList<>();
 
@@ -155,8 +154,7 @@ public class ObjectMetadataSettingParam {
             rval.add(createAMD(CONTENT_MD5, md5));
         }
         for (Map.Entry<String, String> e : userMetaData.entrySet()) {
-            if (!OMD_EXCLUDE.contains(e.getKey()))
-            {
+            if (!OMD_EXCLUDE.contains(e.getKey())) {
                 rval.add(createAMD(e.getKey(), e.getValue()));
             }
         }

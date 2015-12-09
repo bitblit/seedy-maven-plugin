@@ -1,6 +1,5 @@
 package com.erigir.maven.plugin.apiconfig;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**

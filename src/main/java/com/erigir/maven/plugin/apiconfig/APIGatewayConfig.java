@@ -34,16 +34,14 @@ public class APIGatewayConfig {
         this.resourceMethods = resourceMethods;
     }
 
-    public String parentPath()
-    {
+    public String parentPath() {
         int idx = resourcePath.lastIndexOf("/");
         String parentPath = resourcePath.substring(0, idx);
         return parentPath;
     }
 
-    public String endPathPart()
-    {
+    public String endPathPart() {
         int idx = resourcePath.lastIndexOf("/");
-        return resourcePath.substring(idx+1);
+        return resourcePath.substring(idx + 1);
     }
 }

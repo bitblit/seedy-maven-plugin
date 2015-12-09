@@ -1,6 +1,5 @@
 package com.erigir.maven.plugin.s3uploadparam;
 
-import com.erigir.wrench.drigo.ProcessIncludes;
 import com.erigir.wrench.drigo.ProcessReplace;
 
 import java.util.LinkedHashMap;
@@ -26,7 +25,7 @@ public class ProcessReplaceParam {
     private String includeRegex;
     private String prefix;
     private String suffix;
-    private LinkedHashMap<String,String> replace = new LinkedHashMap<>();
+    private LinkedHashMap<String, String> replace = new LinkedHashMap<>();
 
     public String getIncludeRegex() {
         return includeRegex;
@@ -60,17 +59,15 @@ public class ProcessReplaceParam {
         this.replace = replace;
     }
 
-    public ProcessReplace toDrigo()
-    {
+    public ProcessReplace toDrigo() {
         ProcessReplace rval = new ProcessReplace();
         rval.setIncludeRegex(includeRegex);
         rval.setPrefix(prefix);
         rval.setSuffix(suffix);
 
-        LinkedHashMap<Pattern,String> r = new LinkedHashMap<>();
-        for (Map.Entry<String,String> e:replace.entrySet())
-        {
-            r.put(Pattern.compile(e.getKey()),e.getValue());
+        LinkedHashMap<Pattern, String> r = new LinkedHashMap<>();
+        for (Map.Entry<String, String> e : replace.entrySet()) {
+            r.put(Pattern.compile(e.getKey()), e.getValue());
         }
 
         rval.setReplace(r);

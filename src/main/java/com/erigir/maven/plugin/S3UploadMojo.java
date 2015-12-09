@@ -12,10 +12,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.SynchronousQueue;
 import java.util.regex.Pattern;
 
 /**
@@ -198,7 +196,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             File sysTempDir = new File(System.getProperty("java.io.tmpdir"));
             File myTemp = new File(sysTempDir, UUID.randomUUID().toString());
             myTemp.deleteOnExit(); // clean up after ourselves
-            getLog().info("Seedy using Drigo temp directory : "+myTemp.getAbsolutePath());
+            getLog().info("Seedy using Drigo temp directory : " + myTemp.getAbsolutePath());
 
 
             // Build the drigo configuration
@@ -235,22 +233,22 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             }
 
             if (processIncludes != null) {
-                getLog().info("Process Includes found ("+processIncludes.size()+") adding to Drigo configuration");
+                getLog().info("Process Includes found (" + processIncludes.size() + ") adding to Drigo configuration");
                 List<ProcessIncludes> list = new LinkedList<>();
                 for (ProcessIncludesParam p : processIncludes) {
-                    getLog().info("PI:"+p.getIncludeRegex()+" p:"+p.getPrefix()+" s:"+p.getSuffix());
+                    getLog().info("PI:" + p.getIncludeRegex() + " p:" + p.getPrefix() + " s:" + p.getSuffix());
                     list.add(p.toDrigo());
                 }
                 conf.setProcessIncludes(list);
             }
 
             if (replacement != null) {
-                getLog().info("Replacement found ("+replacement.getReplace().size()+" mappings) adding to Drigo configuration");
+                getLog().info("Replacement found (" + replacement.getReplace().size() + " mappings) adding to Drigo configuration");
                 conf.setProcessReplace(replacement.toDrigo());
             }
 
             if (exclusions != null) {
-                getLog().info("Exclusions found ("+exclusions.size()+") adding to Drigo configuration");
+                getLog().info("Exclusions found (" + exclusions.size() + ") adding to Drigo configuration");
                 List<Exclusion> list = new LinkedList<>();
                 for (ExclusionParam p : exclusions) {
                     list.add(p.toDrigo());
@@ -282,9 +280,8 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 conf.setValidation(list);
             }
 
-            if (renameMappings!=null)
-            {
-                getLog().info("Rename mappings found ("+renameMappings.size()+") adding to Drigo configuration");
+            if (renameMappings != null) {
+                getLog().info("Rename mappings found (" + renameMappings.size() + ") adding to Drigo configuration");
                 List<RenameMapping> list = new LinkedList<>();
                 for (RenameMappingParam p : renameMappings) {
                     list.add(p.toDrigo());
@@ -292,8 +289,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 conf.setRenameMappings(list);
             }
 
-            if (md5!=null)
-            {
+            if (md5 != null) {
                 getLog().info("MD5 requested, adding to Drigo configuration");
                 conf.setMd5GenerationIncludeRegex(Pattern.compile(md5.getIncludeRegex()));
             }
@@ -302,7 +298,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
             drigoResults = processor.execute(conf);
 
             AmazonS3 s3 = s3();
-            processDeltas(s3,drigoResults);
+            processDeltas(s3, drigoResults);
 
             if (doNotUpload) {
                 getLog().info("Processing finished, doNotUpload specified.");
@@ -335,14 +331,12 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
         }
     }
 
-    private void processDeltas(AmazonS3 s3, DrigoResults results)
-    {
-        getLog().info("Processing deltas on results of size "+results.getMetadata().size()+" type "+deltaMethod+" delete is "+deleteNonMatch);
+    private void processDeltas(AmazonS3 s3, DrigoResults results) {
+        getLog().info("Processing deltas on results of size " + results.getMetadata().size() + " type " + deltaMethod + " delete is " + deleteNonMatch);
         List<S3ObjectSummary> noMatchLocal = new LinkedList<>();
 
 
-        if (deltaMethod!=DeltaCalculationMethod.NONE || deleteNonMatch)
-        {
+        if (deltaMethod != DeltaCalculationMethod.NONE || deleteNonMatch) {
             long start = System.currentTimeMillis();
             List<String> keysToDelete = new LinkedList<>();
 
@@ -374,16 +368,13 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                                     if (!localFile.delete()) {
                                         getLog().warn("Error removing file " + localFile.getName() + " from upload");
                                     }
-                                    while (localFile.getParentFile().list().length==0)
-                                    {
-                                        getLog().info("Parent dir empty, removing it too "+localFile.getParentFile().getName());
+                                    while (localFile.getParentFile().list().length == 0) {
+                                        getLog().info("Parent dir empty, removing it too " + localFile.getParentFile().getName());
                                         localFile = localFile.getParentFile();
                                         localFile.delete();
                                     }
-                                }
-                                else
-                                {
-                                    getLog().debug("Retained "+localFile.getName()+" for copy");
+                                } else {
+                                    getLog().debug("Retained " + localFile.getName() + " for copy");
                                 }
                                 break;
                             case MD5:
@@ -396,16 +387,13 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                                     if (!localFile.delete()) {
                                         getLog().warn("Error removing file " + localFile.getName() + " from upload");
                                     }
-                                    while (localFile.getParentFile().list().length==0)
-                                    {
-                                        getLog().info("Parent dir empty, removing it too "+localFile.getParentFile().getName());
+                                    while (localFile.getParentFile().list().length == 0) {
+                                        getLog().info("Parent dir empty, removing it too " + localFile.getParentFile().getName());
                                         localFile = localFile.getParentFile();
                                         localFile.delete();
                                     }
-                                }
-                                else
-                                {
-                                    getLog().debug("Retained "+localFile.getName()+" for copy");
+                                } else {
+                                    getLog().debug("Retained " + localFile.getName() + " for copy");
                                 }
                                 break;
                             default:
@@ -422,29 +410,24 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 }
 
                 shouldContinue = listing.isTruncated();
-                if (shouldContinue)
-                {
+                if (shouldContinue) {
                     getLog().debug("Pulling another batch from S3");
                     listing = s3.listNextBatchOfObjects(listing);
                 }
 
             }
-            getLog().info("Delta check removed "+sameCount+" files (out of "+drigoResults.getMetadata().size()+") - saving "+sameBytes+" bytes transfer");
+            getLog().info("Delta check removed " + sameCount + " files (out of " + drigoResults.getMetadata().size() + ") - saving " + sameBytes + " bytes transfer");
 
-            if (deleteNonMatch)
-            {
-                getLog().info("Found "+keysToDelete.size()+" files to delete from server ("+keysToDelete+")");
-                for (String key:keysToDelete)
-                {
-                    getLog().info("Deleting file : "+key);
+            if (deleteNonMatch) {
+                getLog().info("Found " + keysToDelete.size() + " files to delete from server (" + keysToDelete + ")");
+                for (String key : keysToDelete) {
+                    getLog().info("Deleting file : " + key);
                     s3.deleteObject(s3Bucket, key);
                 }
             }
-            getLog().info("Delta check took "+(System.currentTimeMillis()-start)+" ms to run");
+            getLog().info("Delta check took " + (System.currentTimeMillis() - start) + " ms to run");
 
-        }
-        else
-        {
+        } else {
             getLog().info("Skipping, NONE specified and delete is false");
         }
 
@@ -513,11 +496,11 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
 
         Map<String, String> meta = drigoResults.getMetadata().get(file);
         getLog().debug("For file " + file + " got " + meta);
-        if (meta!=null) {
+        if (meta != null) {
             ObjectMetadataSettingParam.populateObjectMetaDataFromDrigoMeta(objectMetadata, meta);
         }
         String uploadTimestamp = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss Z").format(new Date());
-        objectMetadata.addUserMetadata("seedy-upload-time",uploadTimestamp);
+        objectMetadata.addUserMetadata("seedy-upload-time", uploadTimestamp);
     }
 
     @Override

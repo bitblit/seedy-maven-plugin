@@ -37,8 +37,7 @@ public class ExclusionParam {
         this.includeRegex = includeRegex;
     }
 
-    public Exclusion toDrigo()
-    {
+    public Exclusion toDrigo() {
         Exclusion rval = new Exclusion();
         rval.setIncludeRegex(includeRegex);
         return rval;
