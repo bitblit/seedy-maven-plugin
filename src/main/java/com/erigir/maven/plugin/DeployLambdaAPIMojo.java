@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");

@@ -10,7 +10,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");

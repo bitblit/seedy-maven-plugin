@@ -13,7 +13,7 @@ import org.apache.maven.plugin.MojoFailureException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");

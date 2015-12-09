@@ -1,6 +1,6 @@
 package com.erigir.maven.plugin.s3uploadparam;
 
-/**
+/*
  * Copyright 2014-2015 Christopher Weiss
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
