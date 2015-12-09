@@ -1,4 +1,4 @@
-<project name="Nodeclipse">
+<project name="seedy-maven-plugin">
     <bannerLeft>
         <name>seedy-maven-plugin</name>
         <href>https://github.com/bitblit/seedy-maven-plugin</href>
