@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<rss version="0.91">
+  <channel>
+    <title>Seedy Maven Plugin - Checkstyle report</title>
+    <link>http://bitblit.github.io/seedy-maven-plugin</link>
+    <description>Seedy Maven Plugin - Checkstyle report</description>
+    <language>en-us</language>
+    <copyright>&#169;2014 - 2015 Erigir</copyright>
+    <item>
+      <title>File: 23,
+             Errors: 1053,
+             Warnings: 0,
+             Infos: 0
+      </title>
+            <link>http://bitblit.github.io/seedy-maven-plugin/checkstyle.html</link>
+      <description>
+        <p>Click <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html">here</a> for the full Checkstyle report.</p>
+
+        <table summary="Files" boder="1">
+          <thead>
+            <tr>
+              <th>Files</th>
+              <th style="width:30px;"><abbr title="Info">I</abbr></th>
+              <th style="width:30px;"><abbr title="Warning">W</abbr></th>
+              <th style="width:30px;"><abbr title="Error">E</abbr></th>
+            </tr>
+          </thead>
+          <tbody>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.MD5CalculationParam.java">com/erigir/maven/plugin/s3uploadparam/MD5CalculationParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  12
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.S3UploadMojo.java">com/erigir/maven/plugin/S3UploadMojo.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  228
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.StartNewEnvironmentMojo.java">com/erigir/maven/plugin/StartNewEnvironmentMojo.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  115
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.apiconfig.LambdaConfig.java">com/erigir/maven/plugin/apiconfig/LambdaConfig.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  35
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.ObjectMetadataSettingParam.java">com/erigir/maven/plugin/s3uploadparam/ObjectMetadataSettingParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  76
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.DeployLambdaAPIMojo.java">com/erigir/maven/plugin/DeployLambdaAPIMojo.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  233
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.apiconfig.EndpointConfig.java">com/erigir/maven/plugin/apiconfig/EndpointConfig.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  29
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.ExclusionParam.java">com/erigir/maven/plugin/s3uploadparam/ExclusionParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  12
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.ValidationSettingParam.java">com/erigir/maven/plugin/s3uploadparam/ValidationSettingParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  17
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.JavascriptCompilationParam.java">com/erigir/maven/plugin/s3uploadparam/JavascriptCompilationParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  16
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.FlipEnvironmentLiveMojo.java">com/erigir/maven/plugin/FlipEnvironmentLiveMojo.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  31
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.ProcessIncludesParam.java">com/erigir/maven/plugin/s3uploadparam/ProcessIncludesParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  24
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.AbstractSeedyMojo.java">com/erigir/maven/plugin/AbstractSeedyMojo.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  32
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.DeltaCalculationMethod.java">com/erigir/maven/plugin/s3uploadparam/DeltaCalculationMethod.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  3
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.ProcessReplaceParam.java">com/erigir/maven/plugin/s3uploadparam/ProcessReplaceParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  37
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.apiconfig.APIGatewayConfig.java">com/erigir/maven/plugin/apiconfig/APIGatewayConfig.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  29
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.CssCompilationParam.java">com/erigir/maven/plugin/s3uploadparam/CssCompilationParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  7
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.RenameMappingParam.java">com/erigir/maven/plugin/s3uploadparam/RenameMappingParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  17
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.apiconfig.APIConfig.java">com/erigir/maven/plugin/apiconfig/APIConfig.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  15
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.BabelCompilationParam.java">com/erigir/maven/plugin/s3uploadparam/BabelCompilationParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  10
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.HtmlCompressionParam.java">com/erigir/maven/plugin/s3uploadparam/HtmlCompressionParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  7
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.FileCompressionParam.java">com/erigir/maven/plugin/s3uploadparam/FileCompressionParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  7
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://bitblit.github.io/seedy-maven-plugin/checkstyle.html#com.erigir.maven.plugin.s3uploadparam.HtmlResourceBatchingParam.java">com/erigir/maven/plugin/s3uploadparam/HtmlResourceBatchingParam.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  61
+                </td>
+              </tr>
+                      </tbody>
+        </table>
+        
+      </description>
+    </item>
+  </channel>
+</rss>
+

@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="Date-Revision-yyyymmdd" content="20151209" />
     <meta http-equiv="Content-Language" content="en" />
-    <title>Nodeclipse &#x2013; seedy-maven-plugin</title>
+    <title>Nodeclipse &#x2013; PMD Results</title>
     <link rel="stylesheet" href="./css/apache-maven-fluido-1.3.0.min.css" />
     <link rel="stylesheet" href="./css/site.css" />
     <link rel="stylesheet" href="./css/print.css" media="print" />
@@ -169,104 +169,48 @@
                     
                 <ul class="nav nav-list">
                     <li class="nav-header">Project Documentation</li>
-                                                                                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                                                                        
       <li>
     
                           <a href="project-info.html" title="Project Information">
-          <i class="icon-chevron-down"></i>
+          <i class="icon-chevron-right"></i>
         Project Information</a>
+                  </li>
+                                                                                                                                    
+      <li>
+    
+                          <a href="project-reports.html" title="Project Reports">
+          <i class="icon-chevron-down"></i>
+        Project Reports</a>
                     <ul class="nav nav-list">
                       
       <li>
     
-                          <a href="integration.html" title="Continuous Integration">
+                          <a href="surefire-report.html" title="Surefire Report">
           <i class="none"></i>
-        Continuous Integration</a>
+        Surefire Report</a>
             </li>
                       
       <li>
     
-                          <a href="dependencies.html" title="Dependencies">
+                          <a href="checkstyle.html" title="Checkstyle">
           <i class="none"></i>
-        Dependencies</a>
+        Checkstyle</a>
             </li>
                       
       <li>
     
-                          <a href="dependency-info.html" title="Dependency Information">
+                          <a href="cpd.html" title="CPD">
           <i class="none"></i>
-        Dependency Information</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="distribution-management.html" title="Distribution Management">
-          <i class="none"></i>
-        Distribution Management</a>
+        CPD</a>
             </li>
                       
       <li class="active">
     
-            <a href="#"><i class="none"></i>About</a>
+            <a href="#"><i class="none"></i>PMD</a>
           </li>
-                      
-      <li>
-    
-                          <a href="issue-tracking.html" title="Issue Tracking">
-          <i class="none"></i>
-        Issue Tracking</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="license.html" title="Project License">
-          <i class="none"></i>
-        Project License</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="plugin-management.html" title="Plugin Management">
-          <i class="none"></i>
-        Plugin Management</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="plugins.html" title="Project Plugins">
-          <i class="none"></i>
-        Project Plugins</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="team-list.html" title="Project Team">
-          <i class="none"></i>
-        Project Team</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="source-repository.html" title="Source Repository">
-          <i class="none"></i>
-        Source Repository</a>
-            </li>
-                      
-      <li>
-    
-                          <a href="project-summary.html" title="Project Summary">
-          <i class="none"></i>
-        Project Summary</a>
-            </li>
               </ul>
         </li>
-                                                                                                                          
-      <li>
-    
-                          <a href="project-reports.html" title="Project Reports">
-          <i class="icon-chevron-right"></i>
-        Project Reports</a>
-                  </li>
                               <li class="nav-header">Usage</li>
                                 
       <li>
@@ -344,11 +288,122 @@
                 
         <div id="bodyColumn"  class="span9" >
                                   
-            <h1>seedy-maven-plugin</h1>
-<p>Helper tools to implement Continuous Deployment atop AWS Services (especially with Jenkins)</p>
+            <div class="section">
+<h2><a name="PMD_Results"></a>PMD Results</h2>
+<p>The following document contains the results of <a class="externalLink" href="http://pmd.sourceforge.net/">PMD</a> 5.3.2.</p></div>
 <div class="section">
-<h2><a name="Acknowledgements"></a>Acknowledgements</h2>
-<p>This tool got its start from <a class="externalLink" href="https://github.com/bazaarvoice/s3-upload-maven-plugin">https://github.com/bazaarvoice/s3-upload-maven-plugin</a> to which it is heavily indebted, especially the S3 uploader. While I have decided to go ahead and fork from there to allow more active development (last commit was 12/31/2013) and add more HTTP-centric things to the tool, this is in no way intended as disrespect to what is still an awesome tool.</p></div>
+<h2><a name="Files"></a>Files</h2>
+<div class="section">
+<h3><a name="comerigirmavenpluginDeployLambdaAPIMojo.java"></a>com/erigir/maven/plugin/DeployLambdaAPIMojo.java</h3>
+<table border="0" class="table table-striped">
+<tr class="a">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'com.erigir.maven.plugin.apiconfig.LambdaConfig'</td>
+<td>22</td></tr>
+<tr class="a">
+<td>Avoid unused imports such as 'java.lang.reflect.Method'</td>
+<td>34</td></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'java.net.MalformedURLException'</td>
+<td>35</td></tr>
+<tr class="a">
+<td>Avoid unused imports such as 'java.net.URL'</td>
+<td>36</td></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'java.net.URLClassLoader'</td>
+<td>37</td></tr>
+<tr class="a">
+<td>Avoid duplicate imports such as 'java.util.Objects'</td>
+<td>40</td></tr>
+<tr class="b">
+<td>Avoid duplicate imports such as 'java.util.Optional'</td>
+<td>41</td></tr>
+<tr class="a">
+<td>Avoid unused imports such as 'java.util.concurrent.atomic.AtomicLong'</td>
+<td>42</td></tr>
+<tr class="b">
+<td>Useless parentheses.</td>
+<td>184</td></tr>
+<tr class="a">
+<td>Avoid unused local variables such as 'e'.</td>
+<td>244</td></tr>
+<tr class="b">
+<td>Useless parentheses.</td>
+<td>285</td></tr>
+<tr class="a">
+<td>Avoid unused private methods such as 'deployGatewayEndpoint(AmazonApiGateway,RestApi,List,EndpointConfig)'.</td>
+<td>288</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenpluginFlipEnvironmentLiveMojo.java"></a>com/erigir/maven/plugin/FlipEnvironmentLiveMojo.java</h3>
+<table border="0" class="table table-striped">
+<tr class="b">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="a">
+<td>Avoid unused imports such as 'org.apache.maven.plugin.MojoExecutionException'</td>
+<td>8</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenpluginS3UploadMojo.java"></a>com/erigir/maven/plugin/S3UploadMojo.java</h3>
+<table border="0" class="table table-striped">
+<tr class="b">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="a">
+<td>Avoid unused imports such as 'java.io.FileInputStream'</td>
+<td>15</td></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'java.util.concurrent.SynchronousQueue'</td>
+<td>18</td></tr>
+<tr class="a">
+<td>Avoid unused local variables such as 'noMatchLocal'.</td>
+<td>341</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenpluginStartNewEnvironmentMojo.java"></a>com/erigir/maven/plugin/StartNewEnvironmentMojo.java</h3>
+<table border="0" class="table table-striped">
+<tr class="b">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="a">
+<td>Avoid unused private fields such as 'afterGreenSleepSeconds'.</td>
+<td>106</td></tr>
+<tr class="b">
+<td>Avoid unused private fields such as 'terminateOldEnviroment'.</td>
+<td>130</td></tr>
+<tr class="a">
+<td>Avoid unused local variables such as 'liveEnvironment'.</td>
+<td>179</td></tr>
+<tr class="b">
+<td>Avoid unused local variables such as 'uc'.</td>
+<td>346</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenpluginapiconfigEndpointConfig.java"></a>com/erigir/maven/plugin/apiconfig/EndpointConfig.java</h3>
+<table border="0" class="table table-striped">
+<tr class="a">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'com.fasterxml.jackson.annotation.JacksonInject'</td>
+<td>3</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenplugins3uploadparamObjectMetadataSettingParam.java"></a>com/erigir/maven/plugin/s3uploadparam/ObjectMetadataSettingParam.java</h3>
+<table border="0" class="table table-striped">
+<tr class="a">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="b">
+<td>Useless parentheses.</td>
+<td>114</td></tr></table></div>
+<div class="section">
+<h3><a name="comerigirmavenplugins3uploadparamProcessReplaceParam.java"></a>com/erigir/maven/plugin/s3uploadparam/ProcessReplaceParam.java</h3>
+<table border="0" class="table table-striped">
+<tr class="a">
+<th>Violation</th>
+<th>Line</th></tr>
+<tr class="b">
+<td>Avoid unused imports such as 'com.erigir.wrench.drigo.ProcessIncludes'</td>
+<td>3</td></tr></table></div></div>
                   </div>
             </div>
           </div>
