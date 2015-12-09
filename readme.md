@@ -2,5 +2,6 @@
 
 Helper tools to implement Continuous Deployment atop AWS Services (especially with Jenkins)
 
-* This site has most of its documentation in Maven format - find the most important bits
-<a href="src/site/markdown">here</a>
+See the official site documentation at 
+<a href="http://bitblit.github.io/seedy-maven-plugin">http://bitblit.github.io/seedy-maven-plugin</a>
+
