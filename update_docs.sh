@@ -1,4 +1,4 @@
-mvn -s build_server_maven_settings.xml clean site:site
+mvn -s build_server_maven_settings.xml -DBUILD_NUMBER=x clean site:site
 git checkout gh-pages
 cp -R target/site/* .
 git add .
