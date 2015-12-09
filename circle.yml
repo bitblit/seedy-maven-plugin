@@ -18,4 +18,6 @@ deployment:
  release:
    tag: /release-.*/
    commands:
-   - mvn -X -s build_server_maven_settings.xml -Dgpg.passphrase=$GPG_PASSPHRASE -Dgpg.keyname=$GPG_KEYNAME -Dgpg.publicKeyring=src/config/ci-keyring.gpg  -DskipTests javadoc:jar source:jar deploy
+   - gpg --passphrase $GPG_KEYFILE_ENCRYPT_PASSPHRASE --decrypt src/config/gpg-keys.encrypted --output gpg.keyring
+   - mvn -X -s build_server_maven_settings.xml -Dgpg.passphrase=$GPG_PASSPHRASE -Dgpg.keyname=$GPG_KEYNAME -Dgpg.publicKeyring=$HOME/src/config/ci-keyring.asc -Dgpg.secretKeyring=$HOME/src/config/ci-keyring.asc  -DskipTests javadoc:jar source:jar deploy
+   - rm gpg.keyring
