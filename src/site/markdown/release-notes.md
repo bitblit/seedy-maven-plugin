@@ -28,5 +28,26 @@ This is a backwards compatible feature release
 * Added dynamic include capability (parse files and replace tags with contents of other files, like server side includes)
 * Finally started to fix this documentation
 
-### Pre-0.6
-Didn't keep track of release notes before 0.6
+### Version 0.5
+This is a maintenance release. (2015-03-30)
+* Upgraded Closure to version v20150315, and fixed it just crashing on some input - now bad input may result in 
+uncompressed JS but everything should still work.  Also pays attention to the compilation level now, and no longer has
+ to disable system.exit to work.  At some point will extend this to allow custom externs, but not right now.
+
+### Version 0.4
+This is a backwards compatible feature release. (2015-03-07)
+* Added the 'assumedRoleArn' and 'assumedRoleExternalId' properties to all mojos to allow Seedy to deploy to a 
+different AWS account than the one on the current machine.  Typical use case is when the build server is on
+ account but is deploying to another account.  See 
+ http://docs.aws.amazon.com/IAM/latest/UserGuide/roles-usingrole-switchapi.html for some details.
+
+### Version 0.3 skipped
+
+### Version 0.2
+This is a maintenance release. (2015-03-03)
+* Fixed an issue where Seedy was only looking at Java system properties for BUILD_ID and BUILD_NUMBER (Jenkins uses 
+environmental variables)
+
+### Version 0.1
+Initial release (2014-10-20)
+* This is the initial release of the Seedy product.
