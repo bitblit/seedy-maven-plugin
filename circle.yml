@@ -27,5 +27,7 @@ deployment:
    - git checkout gh-pages
    - cp -R target/site/* .
    - git add .
+   - git config --global user.email "build@erigir.com"
+   - git config --global user.name "CircleCI Build Server (Push by $CIRCLE_USERNAME)"
    - git commit -a -m "Updating documentation"
    - git push origin gh-pages
