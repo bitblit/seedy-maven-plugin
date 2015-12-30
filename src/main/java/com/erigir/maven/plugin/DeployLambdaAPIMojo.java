@@ -10,10 +10,7 @@ import com.amazonaws.services.apigateway.AmazonApiGateway;
 import com.amazonaws.services.apigateway.AmazonApiGatewayClient;
 import com.amazonaws.services.apigateway.model.*;
 import com.amazonaws.services.lambda.AWSLambdaClient;
-import com.amazonaws.services.lambda.model.CreateFunctionRequest;
-import com.amazonaws.services.lambda.model.CreateFunctionResult;
-import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
-import com.amazonaws.services.lambda.model.FunctionCode;
+import com.amazonaws.services.lambda.model.*;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -377,13 +374,12 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
     /**
      * Attempts to delete an existing function of the same name then deploys the
      * function code to AWS Lambda. TODO: Attempt to do an update with
-     * versioning if the function already TODO: exists.
+     * versioning if the function already exists.
      */
     private void deployLambdaFunction(AWSLambdaClient lambda, EndpointConfig endpointConfig, String s3FilePath) {
         // Attempt to delete it first
         try {
             DeleteFunctionRequest deleteRequest = new DeleteFunctionRequest();
-            // Why the hell didn't they make this a static method?
             deleteRequest = deleteRequest.withFunctionName(endpointConfig.getLambdaConfig().getFunctionName());
             lambda.deleteFunction(deleteRequest);
         } catch (Exception ignored) {
@@ -413,10 +409,21 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         createFunctionRequest.setTimeout(endpointConfig.getLambdaConfig().getTimeoutInSeconds());
         createFunctionRequest.setMemorySize(endpointConfig.getLambdaConfig().getMemoryInMb());
 
+        getLog().debug("Creating function from code in bucket :"+s3Bucket+" path "+s3FilePath);
         FunctionCode functionCode = new FunctionCode();
         functionCode.setS3Bucket(s3Bucket);
         functionCode.setS3Key(s3FilePath);
         createFunctionRequest.setCode(functionCode);
+
+        /*
+
+        CreateEventSourceMappingRequest cm = new CreateEventSourceMappingRequest()
+                .withBatchSize()
+                .withEnabled()
+                .withEventSourceArn()
+                .withFunctionName()
+                .withStartingPosition()
+                */
 
         return lambda.createFunction(createFunctionRequest);
     }

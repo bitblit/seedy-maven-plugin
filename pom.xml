@@ -4,7 +4,7 @@
 
     <groupId>com.erigir</groupId>
     <artifactId>seedy-maven-plugin</artifactId>
-    <version>0.8.${BUILD_NUMBER}</version>
+    <version>${BUILD_NUMBER}</version>
     <packaging>maven-plugin</packaging>
 
     <name>Seedy Maven Plugin</name>
@@ -97,7 +97,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <jackson.version>2.6.2</jackson.version>
-        <aws.version>1.10.39</aws.version>
+        <aws.version>1.10.43</aws.version>
         <aws.lambda.version>1.1.0</aws.lambda.version>
         <wrench.version>1.003</wrench.version>
     </properties>

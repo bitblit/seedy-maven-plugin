@@ -1,11 +1,16 @@
 ## Release Notes
 
-### Version 0.8.x
+
+### Version 0.9.0
 This is a backwards compatible preview release
 * Switching to semantic versioning
 * Switching to CircleCI for continuous integration
 * Adding preview version of Lambda API deployment
 * Refactoring of documentation into Maven site-worthy setup
+
+### Version 0.8.39
+This is a broken version - DON'T USE IT
+* Failed in attempt to move to semantic versioning atop CircleCI
 
 ### Version 0.71
 This is a backwards compatible bugfix release
