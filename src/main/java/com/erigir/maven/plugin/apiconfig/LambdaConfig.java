@@ -28,6 +28,8 @@ public class LambdaConfig {
     private int timeoutInSeconds;
     private int memoryInMb;
     private String roleArn;
+    private String className;
+    private String description;
 
     public String getFunctionName() {
         return functionName;
@@ -67,5 +69,21 @@ public class LambdaConfig {
 
     public void setRoleArn(String roleArn) {
         this.roleArn = roleArn;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

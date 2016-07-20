@@ -213,12 +213,12 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 conf.setAddMetadata(addMetadata);
             }
 
-            if (babelCompilation != null) {
+            if (babelCompilation != null && babelCompilation.getIncludeRegex()!=null) {
                 getLog().info("Babel found, adding to Drigo configuration");
                 conf.setBabelCompilationIncludeRegex(Pattern.compile(babelCompilation.getIncludeRegex()));
             }
 
-            if (cssCompilation != null) {
+            if (cssCompilation != null && cssCompilation.getIncludeRegex()!=null) {
                 getLog().info("CSS compilation found, adding to Drigo configuration");
                 conf.setCssCompilationIncludeRegex(Pattern.compile(cssCompilation.getIncludeRegex()));
             }
@@ -227,7 +227,10 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 getLog().info("HTML resource batching found, adding to Drigo configuration");
                 List<HtmlResourceBatching> list = new LinkedList<>();
                 for (HtmlResourceBatchingParam p : htmlResourceBatchings) {
-                    list.add(p.toDrigoBatching());
+                    if (p.getIncludeRegex()!=null)
+                    {
+                        list.add(p.toDrigoBatching());
+                    }
                 }
                 conf.setHtmlResourceBatching(list);
             }
@@ -236,37 +239,46 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 getLog().info("Process Includes found (" + processIncludes.size() + ") adding to Drigo configuration");
                 List<ProcessIncludes> list = new LinkedList<>();
                 for (ProcessIncludesParam p : processIncludes) {
-                    getLog().info("PI:" + p.getIncludeRegex() + " p:" + p.getPrefix() + " s:" + p.getSuffix());
-                    list.add(p.toDrigo());
+                    if (p.getIncludeRegex()!=null)
+                    {
+                        getLog().info("PI:" + p.getIncludeRegex() + " p:" + p.getPrefix() + " s:" + p.getSuffix());
+                        list.add(p.toDrigo());
+                    }
                 }
                 conf.setProcessIncludes(list);
             }
 
             if (replacement != null) {
-                getLog().info("Replacement found (" + replacement.getReplace().size() + " mappings) adding to Drigo configuration");
-                conf.setProcessReplace(replacement.toDrigo());
+                if (replacement.getIncludeRegex()!=null)
+                {
+                    getLog().info("Replacement found (" + replacement.getReplace().size() + " mappings) adding to Drigo configuration");
+                    conf.setProcessReplace(replacement.toDrigo());
+                }
             }
 
             if (exclusions != null) {
                 getLog().info("Exclusions found (" + exclusions.size() + ") adding to Drigo configuration");
                 List<Exclusion> list = new LinkedList<>();
                 for (ExclusionParam p : exclusions) {
-                    list.add(p.toDrigo());
+                    if (p.getIncludeRegex()!=null)
+                    {
+                        list.add(p.toDrigo());
+                    }
                 }
                 conf.setExclusions(list);
             }
 
-            if (fileCompression != null) {
+            if (fileCompression != null && fileCompression.getIncludeRegex()!=null) {
                 getLog().info("File Compression found, adding to Drigo configuration");
                 conf.setFileCompressionIncludeRegex(Pattern.compile(fileCompression.getIncludeRegex()));
             }
 
-            if (htmlCompression != null) {
+            if (htmlCompression != null && htmlCompression.getIncludeRegex()!=null) {
                 getLog().info("HTML Compression found, adding to Drigo configuration");
                 conf.setHtmlCompression(Pattern.compile(htmlCompression.getIncludeRegex()));
             }
 
-            if (javascriptCompilation != null) {
+            if (javascriptCompilation != null && javascriptCompilation.getIncludeRegex()!=null) {
                 getLog().info("Javascript Compilation found, adding to Drigo configuration");
                 conf.setJavascriptCompilation(javascriptCompilation.toDrigo());
             }
@@ -275,7 +287,10 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 getLog().info("Validators found, adding to Drigo configuration");
                 List<ValidationSetting> list = new LinkedList<>();
                 for (ValidationSettingParam p : validators) {
-                    list.add(p.toDrigo());
+                    if (p.getIncludeRegex()!=null)
+                    {
+                        list.add(p.toDrigo());
+                    }
                 }
                 conf.setValidation(list);
             }
@@ -289,7 +304,7 @@ public class S3UploadMojo extends AbstractSeedyMojo implements ObjectMetadataPro
                 conf.setRenameMappings(list);
             }
 
-            if (md5 != null) {
+            if (md5 != null && md5.getIncludeRegex()!=null) {
                 getLog().info("MD5 requested, adding to Drigo configuration");
                 conf.setMd5GenerationIncludeRegex(Pattern.compile(md5.getIncludeRegex()));
             }

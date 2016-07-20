@@ -1,5 +1,8 @@
 ## Release Notes
 
+### Version 0.9.1
+This is a backwards compatible bug-fix release
+* Adds null checks around the options on s3-upload to prevent crashing on NPE when missing fields
 
 ### Version 0.9.0
 This is a backwards compatible preview release

@@ -12,10 +12,11 @@ import com.amazonaws.services.apigateway.model.*;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.model.*;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.LambdaConfiguration;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.erigir.maven.plugin.apiconfig.APIConfig;
-import com.erigir.maven.plugin.apiconfig.EndpointConfig;
+import com.erigir.maven.plugin.apiconfig.LambdaConfig;
+import com.erigir.maven.plugin.apiconfig.MultiLambdaConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -65,8 +66,8 @@ import java.util.*;
  * single jar - use another tool (such as the shade plugin) to do this before
  * running this mojo
  */
-@Mojo(name = "deploy-lambda-api", defaultPhase = LifecyclePhase.DEPLOY)
-public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
+@Mojo(name = "deploy-multi-lambda", defaultPhase = LifecyclePhase.DEPLOY)
+public class DeployMultiLambdaMojo extends AbstractSeedyMojo {
 
     /**
      * If deploying to a different account, this is the ARN of the role in that account
@@ -141,20 +142,19 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
             }
 
             AmazonS3 s3 = s3();
-            AmazonApiGateway apiGateway = apiGateway();
             AWSLambdaClient lambda = lambda();
 
-            APIConfig config = readConfigFile();
+            MultiLambdaConfig config = readConfigFile();
             String newFileName = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date()) + "-lambda-deploy.jar";
 
             if (doNotUpload) {
                 getLog().info("Processing finished, doNotUpload specified.");
                 getLog().info(String.format("File %s would have be uploaded to s3://%s/%s (dry run) and processed %d functions",
-                        source, s3Bucket, newFileName, config.getEndpoints().size()));
+                        source, s3Bucket, newFileName, config.getFunctions().size()));
                 return;
             } else {
 
-                if (config.getEndpoints().size() > 0) {
+                if (config.getFunctions().size() > 0) {
                     if (s3FilePath == null) {
                         getLog().info("Uploading JAR file to s3 (" + source.length() + " bytes : " + source.getAbsolutePath() + ")");
                         ObjectMetadata omd = new ObjectMetadata();
@@ -187,20 +187,10 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
                         newFileName = s3FilePath;
                     }
 
-                    RestApi api = findApi(apiGateway, config.getApiName());
-                    List<Resource> startingResources = findResources(apiGateway, api); // will be used by api gateway
-                    getLog().info("Found " + startingResources + " resources in the current API Gateway");
-
-
-                    for (EndpointConfig e : config.getEndpoints()) {
-                        getLog().info("Saving Lambda function " + e.getLambdaConfig().getFunctionName());
-                        deployLambdaFunction(lambda, e, newFileName);
-
-
-                        getLog().info("WARNING: Skipping API gateway creation since it isn't fully baked yet");
-                        //getLog().info("Saving API Gateway resource "+ e.getApiGatewayConfig().getResourcePath()+ " "+ e.getApiGatewayConfig().getResourceMethods());
-                        //deployGatewayEndpoint(apiGateway, api, startingResources,  e);
-                        // TODO: Saving gateway resource
+                    for (LambdaConfig e : config.getFunctions()) {
+                        getLog().info("Saving Lambda function " + e.getFunctionName());
+                        CreateFunctionResult lambdaResult = deployLambdaFunction(lambda, config, e, newFileName);
+                        getLog().info("Result : "+lambdaResult);
                     }
 
                     if (deleteOnCompletion) {
@@ -219,15 +209,11 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         }
     }
 
-    private APIConfig readConfigFile()
+    private MultiLambdaConfig readConfigFile()
             throws MojoFailureException {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            APIConfig config = objectMapper.readValue(configFile, APIConfig.class);
-
-            for (EndpointConfig e : config.getEndpoints()) {
-                // TODO: Pretest the class names, methods, etc
-            }
+            MultiLambdaConfig config = objectMapper.readValue(configFile, MultiLambdaConfig.class);
 
             return config;
         } catch (IOException e) {
@@ -245,11 +231,6 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         return assumedRoleExternalId;
     }
 
-    private AmazonApiGateway apiGateway()
-            throws MojoFailureException {
-        return new AmazonApiGatewayClient(credentials());
-    }
-
     private AWSLambdaClient lambda() throws MojoFailureException {
         AWSLambdaClient client = new AWSLambdaClient(credentials());
         client.setRegion(region());
@@ -265,131 +246,26 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
         return (atStart.isPresent()) ? atStart.get() : null;
     }
 
-    private void deployGatewayEndpoint(AmazonApiGateway apiGateway, RestApi api, List<Resource> resourcesAtStart, final EndpointConfig endpointConfig)
-            throws MojoFailureException {
-        try {
-            Resource atStart = findResourceByPath(resourcesAtStart, endpointConfig.getApiGatewayConfig().getResourcePath());
-
-            if (atStart != null) {
-                getLog().debug("Attempting delete of resource " + endpointConfig.getApiGatewayConfig().getResourcePath());
-                DeleteResourceRequest del = new DeleteResourceRequest()
-                        .withResourceId(atStart.getId())
-                        .withRestApiId(api.getId());
-                apiGateway.deleteResource(del);
-                getLog().debug("Delete succeeded");
-
-            }
-            Resource parentResource = findParent(resourcesAtStart, endpointConfig);
-            getLog().info("Creating resource " + endpointConfig.getApiGatewayConfig().getResourcePath());
-
-            CreateResourceRequest create = new CreateResourceRequest();
-            create.withParentId(parentResource.getId());
-            create.withRestApiId(api.getId());
-            create.withPathPart(endpointConfig.getApiGatewayConfig().endPathPart());
-            CreateResourceResult createResult = apiGateway.createResource(create);
-
-            getLog().info("Created, Result was " + createResult.getId());
-
-            for (String method : endpointConfig.getApiGatewayConfig().getResourceMethods()) {
-                getLog().info("Creating method " + method);
-
-
-                PutIntegrationRequest intRequest = new PutIntegrationRequest();
-                intRequest.withCacheKeyParameters();
-                //intRequest.withCacheNamespace(); TODO: Impl
-                //intRequest.withCredentials(); TODO: Impl
-                intRequest.withHttpMethod(method);
-                //intRequest.withIntegrationHttpMethod(); TODO: Impl
-                //intRequest.withRequestParameters(); TODO: Impl
-                //intRequest.withRequestTemplates(); TODO: Impl
-                intRequest.withResourceId(createResult.getId());
-                intRequest.withRestApiId(api.getId());
-                intRequest.withType(IntegrationType.AWS);
-                // intRequest.withUri(); TODO: Impl
-
-                PutIntegrationResult methodResult = apiGateway.putIntegration(intRequest);
-
-                /*
-                PutMethodRequest putMethodRequest = new PutMethodRequest();
-                putMethodRequest.withApiKeyRequired(false); // todo: implement
-                putMethodRequest.withAuthorizationType("NONE"); // todo: implement
-                putMethodRequest.withHttpMethod(method);
-                //putMethodRequest.withRequestModels();
-                //putMethodRequest.withRequestParameters();
-                putMethodRequest.withResourceId(createResult.getId());
-                putMethodRequest.withRestApiId(api.getId());
-
-                PutMethodResult methodResult = apiGateway.putMethod(putMethodRequest);
-                */
-                getLog().info("Method created " + methodResult);
-            }
-
-
-        } catch (AmazonClientException ace) {
-            throw new MojoFailureException("Failure", ace);
-        }
-
-
-    }
-
-    private Resource findParent(List<Resource> resource, EndpointConfig config)
-            throws MojoFailureException {
-
-        Resource res = findResourceByPath(resource, config.getApiGatewayConfig().parentPath());
-
-        if (res == null) {
-            throw new MojoFailureException("Couldnt find parent for " + config.getApiGatewayConfig().getResourcePath());
-        }
-        return res;
-    }
-
-    private List<Resource> findResources(AmazonApiGateway apiGateway, RestApi api) {
-        GetResourcesResult resourcesResult = apiGateway.getResources(new GetResourcesRequest().withRestApiId(api.getId()));
-        return resourcesResult.getItems();
-    }
-
-
-    private RestApi findApi(AmazonApiGateway apiGateway, String apiName)
-            throws MojoFailureException {
-        RestApi rval = null;
-        List<String> names = new LinkedList<>();
-
-        Objects.requireNonNull(apiName);
-
-        GetRestApisResult result = apiGateway.getRestApis(new GetRestApisRequest());
-        for (RestApi r : result.getItems()) {
-            names.add(r.getName());
-            if (apiName.equals(r.getName())) {
-                rval = r;
-            }
-        }
-
-        if (rval == null) {
-            throw new MojoFailureException("Couldn't find api with name " + apiName + " valid were " + names);
-        }
-
-        return rval;
-    }
-
     /**
      * Attempts to delete an existing function of the same name then deploys the
      * function code to AWS Lambda. TODO: Attempt to do an update with
      * versioning if the function already exists.
      */
-    private void deployLambdaFunction(AWSLambdaClient lambda, EndpointConfig endpointConfig, String s3FilePath) {
+    private CreateFunctionResult deployLambdaFunction(AWSLambdaClient lambda, MultiLambdaConfig multi, LambdaConfig lambdaConfig, String s3FilePath) {
         // Attempt to delete it first
         try {
             DeleteFunctionRequest deleteRequest = new DeleteFunctionRequest();
-            deleteRequest = deleteRequest.withFunctionName(endpointConfig.getLambdaConfig().getFunctionName());
+            deleteRequest = deleteRequest.withFunctionName(multi.fullName(lambdaConfig));
             lambda.deleteFunction(deleteRequest);
         } catch (Exception ignored) {
             // function didn't exist in the first place.
-            getLog().debug("Didnt delete function " + endpointConfig.getLambdaConfig().getFunctionName());
+            getLog().debug("Didnt delete function " + lambdaConfig.getFunctionName());
         }
 
-        CreateFunctionResult result = createFunction(lambda, endpointConfig, s3FilePath);
+        CreateFunctionResult result = createFunction(lambda, multi, lambdaConfig, s3FilePath);
 
         getLog().info("Function deployed: " + result.getFunctionArn());
+        return result;
     }
 
     /**
@@ -399,15 +275,16 @@ public class DeployLambdaAPIMojo extends AbstractSeedyMojo {
      * @return A CreateFunctionResult indicating the success or failure of the
      * request.
      */
-    private CreateFunctionResult createFunction(AWSLambdaClient lambda, EndpointConfig endpointConfig, String s3FilePath) {
+    private CreateFunctionResult createFunction(AWSLambdaClient lambda, MultiLambdaConfig multi, LambdaConfig lambdaConfig, String s3FilePath) {
         CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest();
-        createFunctionRequest.setDescription(endpointConfig.getDescription());
-        createFunctionRequest.setRole(endpointConfig.getLambdaConfig().getRoleArn());
-        createFunctionRequest.setFunctionName(endpointConfig.getLambdaConfig().getFunctionName());
-        createFunctionRequest.setHandler(endpointConfig.getClassName() + "::handleRequest"); // For now, just handles the lambda cast one
-        createFunctionRequest.setRuntime(endpointConfig.getLambdaConfig().getRuntime());
-        createFunctionRequest.setTimeout(endpointConfig.getLambdaConfig().getTimeoutInSeconds());
-        createFunctionRequest.setMemorySize(endpointConfig.getLambdaConfig().getMemoryInMb());
+        createFunctionRequest.setDescription(lambdaConfig.getDescription());
+        createFunctionRequest.setRole(lambdaConfig.getRoleArn());
+        createFunctionRequest.setFunctionName(multi.fullName(lambdaConfig));
+        createFunctionRequest.setHandler(lambdaConfig.getClassName() + "::handleRequest"); // For now, just handles the lambda cast one
+        createFunctionRequest.setRuntime(lambdaConfig.getRuntime());
+        createFunctionRequest.setTimeout(lambdaConfig.getTimeoutInSeconds());
+        createFunctionRequest.setMemorySize(lambdaConfig.getMemoryInMb());
+
 
         getLog().debug("Creating function from code in bucket :"+s3Bucket+" path "+s3FilePath);
         FunctionCode functionCode = new FunctionCode();
