@@ -54,7 +54,7 @@ jobs:
 
         # Update documentation
       - name: Build website
-        run: mvn site -P reporting -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE}} -Dgpg.keyname=${{ secrets.GPG_KEYNAME}} -Dgpg.homedir=$HOME
+        run: mvn site -P reporting
         shell: bash
 
       - name: Send website to S3
