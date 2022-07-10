@@ -3,9 +3,10 @@ package com.erigir.maven.plugin;
 import com.erigir.maven.plugin.s3uploadparam.*;
 import com.erigir.wrench.drigo.JavascriptCompilation;
 import org.apache.maven.plugin.MojoFailureException;
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class TestS3UploadMojo {
 */
 
     @Test
-    @Ignore
+    @Disabled
     public void testInclusion()
             throws MojoFailureException
     {
